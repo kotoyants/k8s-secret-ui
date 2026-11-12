@@ -8,6 +8,7 @@ import (
 type stub struct{ id string }
 
 func (s stub) ID() string                                         { return s.id }
+func (stub) Describe(SecretRef) (string, string)                  { return "", "" }
 func (stub) List(context.Context) ([]SecretInfo, error)           { return nil, nil }
 func (stub) Get(context.Context, SecretRef) (*SecretData, error)  { return nil, nil }
 func (stub) Update(context.Context, SecretRef, *SecretData) error { return nil }

@@ -1,5 +1,9 @@
 {{define "content"}}
-<h1>Sign in</h1>
-{{with .Error}}<p role="alert">{{.}}</p>{{end}}
-<p><a href="/auth/login{{with .Next}}?next={{.}}{{end}}">Sign in with Google</a></p>
+<article class="narrow">
+  <h1>Sign in</h1>
+  {{with .Error}}<p class="flash flash-error" role="alert">{{.}}</p>{{end}}
+  <p>Use your Google account to access secrets.</p>
+  {{/* Not boosted: this navigates to Google, which must be a full page load. */}}
+  <a role="button" hx-boost="false" href="/auth/login{{with .Next}}?next={{.}}{{end}}">Sign in with Google</a>
+</article>
 {{end}}

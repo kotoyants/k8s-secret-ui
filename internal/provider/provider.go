@@ -70,6 +70,8 @@ func (d *SecretData) SortedKeys() []string { return slices.Sorted(maps.Keys(d.Va
 type Provider interface {
 	// ID is the provider's identifier, stored with imported secrets.
 	ID() string
+	// Describe returns a display group and name for ref (Kubernetes: namespace, name).
+	Describe(ref SecretRef) (group, name string)
 	// List returns the secrets available for import.
 	List(ctx context.Context) ([]SecretInfo, error)
 	// Get reads a secret's values.

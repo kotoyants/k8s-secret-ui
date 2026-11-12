@@ -1,0 +1,40 @@
+{{define "content"}}
+{{with .Data}}
+<h1>Roles</h1>
+<p class="muted">A user can access a secret only if their roles together have <strong>all</strong> of the secret's tags.
+Write access needs all tags from <em>read_write</em> roles.</p>
+<div class="overflow-auto">
+<table class="striped">
+  <thead><tr><th>Name</th><th>Permission</th><th>Tags</th><th>Members</th></tr></thead>
+  <tbody>
+  {{range .Roles}}
+    <tr>
+      <td><a href="/admin/roles/{{.ID}}">{{.Name}}</a>{{if .Builtin}} <small class="muted">built-in</small>{{end}}</td>
+      <td>{{if .Builtin}}{{if eq .Name "admin"}}everything{{else}}—{{end}}{{else}}{{.Permission}}{{end}}</td>
+      <td>{{range .Tags}}<span class="tag">{{.}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
+      <td>{{.MemberCount}}</td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+</div>
+
+<h2>New role</h2>
+<form method="post" action="/admin/roles">
+  <div class="grid">
+    <label>Name <input name="name" required maxlength="64" placeholder="frontend-prod"></label>
+    <label>Permission
+      <select name="permission">
+        <option value="read">read</option>
+        <option value="read_write">read_write</option>
+      </select>
+    </label>
+  </div>
+  <label>Tags <input name="tags" placeholder="front, prod">
+    <small>Comma or space separated. Lowercase letters, digits, '-' and '_'.
+    {{with .Tags}}Existing: {{join . ", "}}{{end}}</small>
+  </label>
+  <button type="submit">Create role</button>
+</form>
+{{end}}
+{{end}}

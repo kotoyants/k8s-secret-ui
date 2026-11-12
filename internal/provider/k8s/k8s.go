@@ -72,6 +72,11 @@ func NewClient(kubeContext string) (corev1client.SecretsGetter, string, error) {
 // ID implements provider.Provider.
 func (p *Provider) ID() string { return ID }
 
+// Describe implements provider.Provider.
+func (p *Provider) Describe(ref provider.SecretRef) (string, string) {
+	return ref.Locator[locNamespace], ref.Locator[locName]
+}
+
 // Ref builds a SecretRef for namespace/name.
 func Ref(namespace, name string) provider.SecretRef {
 	return provider.SecretRef{Provider: ID, Locator: map[string]string{locNamespace: namespace, locName: name}}

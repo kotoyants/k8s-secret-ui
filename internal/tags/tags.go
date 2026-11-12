@@ -2,6 +2,7 @@
 package tags
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -10,6 +11,9 @@ import (
 
 // MaxLen is the maximum length of a single tag (must match the DB CHECK constraint).
 const MaxLen = 64
+
+// ErrInvalid is returned (wrapped) for malformed tags.
+var ErrInvalid = errors.New("invalid tag")
 
 var valid = regexp.MustCompile(`^[a-z0-9_-]{1,64}$`)
 
@@ -23,7 +27,7 @@ func Normalize(in []string) ([]string, error) {
 			continue
 		}
 		if !valid.MatchString(t) {
-			return nil, fmt.Errorf("invalid tag %q: use 1-%d characters a-z, 0-9, '-' or '_'", t, MaxLen)
+			return nil, fmt.Errorf("%w %q: use 1-%d characters a-z, 0-9, '-' or '_'", ErrInvalid, t, MaxLen)
 		}
 		out = append(out, t)
 	}

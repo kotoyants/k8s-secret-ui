@@ -40,7 +40,11 @@ Tooling runs in Docker; do not require local installs beyond Go + Docker.
 ## Conventions
 - Errors: wrap with `fmt.Errorf("...: %w", err)`; handlers map them to user-friendly messages.
 - Tests: table-driven; authz must have full coverage; k8s via the fake clientset; DB tests on real Postgres.
-  Auth/web tests use `internal/auth/authtest` (fake Google OIDC provider + in-memory user store).
+  Auth/web tests use `internal/auth/authtest` (fake Google OIDC provider + in-memory user store);
+  web tests needing a DB use `internal/store/storetest.New(t)`.
+- UI: server-rendered `html/template` pages in `internal/web/templates` (layout + one file per page, registered in
+  `pages.go`). POST handlers end with `h.done(...)` (flash + redirect); errors map via `describeErr`. Return
+  `errorf("...")` for messages meant for the user. No inline JS/CSS (CSP); use htmx attributes.
 - Keep handlers thin: parse the request → call the service/store → render.
 
 ## Workflow

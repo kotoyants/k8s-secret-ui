@@ -3,6 +3,7 @@ IMAGE           ?= ghcr.io/kotoyants/k8s-secret-ui
 VERSION         ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 GOLANGCI_VERSION ?= v2.15.0
 SQLC_VERSION    ?= 1.31.1
+LINT_CACHE      ?= $(HOME)/.cache/k8s-secret-ui-lint
 
 # Load local env for `make run` if present.
 ifneq (,$(wildcard .env))
@@ -34,7 +35,11 @@ lint: ## Run golangci-lint (local binary, or Docker fallback)
 	@if command -v golangci-lint >/dev/null 2>&1; then \
 		golangci-lint run ./...; \
 	else \
-		docker run --rm -v "$(CURDIR)":/app -w /app golangci/golangci-lint:$(GOLANGCI_VERSION) golangci-lint run ./...; \
+		mkdir -p "$(LINT_CACHE)/go-build" "$(LINT_CACHE)/golangci" && \
+		docker run --rm -u "$$(id -u):$$(id -g)" \
+			-e HOME=/tmp -e GOCACHE=/cache/go-build -e GOLANGCI_LINT_CACHE=/cache/golangci -e GOMODCACHE=/gomod \
+			-v "$(LINT_CACHE)":/cache -v "$$(go env GOMODCACHE)":/gomod \
+			-v "$(CURDIR)":/app -w /app golangci/golangci-lint:$(GOLANGCI_VERSION) golangci-lint run ./...; \
 	fi
 
 fmt: ## Format code

@@ -3,7 +3,7 @@
 <h2>Your roles</h2>
 <ul>
   {{range .Principal.Roles}}
-    <li>{{.Name}} ({{.Permission}}){{with .Tags}}: {{range $i, $t := .}}{{if $i}}, {{end}}{{$t}}{{end}}{{end}}</li>
+    <li>{{.Name}} ({{.Permission}}){{with .Tags}}: {{range .}}<span class="tag">{{.}}</span>{{end}}{{end}}</li>
   {{else}}
     <li>No roles assigned.</li>
   {{end}}

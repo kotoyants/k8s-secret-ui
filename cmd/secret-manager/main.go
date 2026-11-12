@@ -97,6 +97,8 @@ func serve(ctx context.Context) error {
 	}
 	st := store.New(pool)
 
+	auditLog := audit.New(log)
+
 	// ctx (not startCtx) keeps the OIDC key set refreshable for the server's lifetime.
 	authSvc, err := auth.New(ctx, auth.Config{
 		Issuer:         auth.GoogleIssuer,
@@ -107,7 +109,7 @@ func serve(ctx context.Context) error {
 		SessionTTL:     cfg.SessionTTL,
 		AllowedDomains: cfg.AllowedDomains,
 		AdminEmails:    cfg.AdminEmails,
-	}, st, audit.New(log), log)
+	}, st, auditLog, log)
 	if err != nil {
 		return err
 	}
@@ -128,7 +130,9 @@ func serve(ctx context.Context) error {
 			Logger:    log,
 			Readiness: []web.ReadinessCheck{{Name: "database", Check: st.Ping}},
 			Auth:      authSvc,
+			Store:     st,
 			Providers: providers,
+			Audit:     auditLog,
 			Secure:    cfg.BaseURL.Scheme == "https",
 		}),
 		ReadHeaderTimeout: 5 * time.Second,

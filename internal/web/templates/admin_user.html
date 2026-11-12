@@ -1,0 +1,63 @@
+{{define "content"}}
+{{with .Data}}
+<p><a href="/admin/users">← Users</a></p>
+<h1>{{.User.Email}}</h1>
+<p>
+  {{with .User.Name}}{{.}} · {{end}}
+  Created {{time .User.CreatedAt}} · Last login {{time .User.LastLoginAt}} ·
+  {{if .User.Disabled}}<span class="status-bad">disabled</span>{{else}}active{{end}}
+</p>
+
+<h2>Roles</h2>
+<table>
+  <thead><tr><th>Role</th><th>Permission</th><th>Tags</th><th></th></tr></thead>
+  <tbody>
+  {{$u := .User}}{{$self := .IsSelf}}
+  {{range .Roles}}
+    <tr>
+      <td><a href="/admin/roles/{{.ID}}">{{.Name}}</a>{{if .Builtin}} <small class="muted">built-in</small>{{end}}</td>
+      <td>{{.Permission}}</td>
+      <td>{{range .Tags}}<span class="tag">{{.}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
+      <td class="actions">
+        {{if and $self .Builtin (eq .Name "admin")}}
+          <small class="muted">your admin role</small>
+        {{else}}
+        <form method="post" action="/admin/users/{{$u.ID}}/roles/{{.ID}}/remove" class="inline"
+              hx-confirm="Remove role {{.Name}} from {{$u.Email}}?">
+          <button type="submit" class="secondary outline small">Remove</button>
+        </form>
+        {{end}}
+      </td>
+    </tr>
+  {{else}}
+    <tr><td colspan="4">No roles. This user cannot see any secrets.</td></tr>
+  {{end}}
+  </tbody>
+</table>
+
+{{with .Available}}
+<form method="post" action="/admin/users/{{$u.ID}}/roles">
+  <fieldset role="group">
+    <select name="role_id" required aria-label="Role to assign">
+      <option value="" selected disabled>Assign a role…</option>
+      {{range .}}<option value="{{.ID}}">{{.Name}} ({{.Permission}}{{with .Tags}}: {{join . ", "}}{{end}})</option>{{end}}
+    </select>
+    <button type="submit">Assign</button>
+  </fieldset>
+</form>
+{{end}}
+
+<h2>Status</h2>
+{{if .User.Disabled}}
+  <form method="post" action="/admin/users/{{.User.ID}}/enable">
+    <button type="submit">Enable user</button>
+  </form>
+{{else if .IsSelf}}
+  <p class="muted">You cannot disable yourself.</p>
+{{else}}
+  <form method="post" action="/admin/users/{{.User.ID}}/disable" hx-confirm="Disable {{.User.Email}}? Their access is revoked immediately.">
+    <button type="submit" class="contrast">Disable user</button>
+  </form>
+{{end}}
+{{end}}
+{{end}}

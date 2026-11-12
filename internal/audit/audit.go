@@ -14,6 +14,21 @@ const (
 	ActionLogin       = "login"
 	ActionLoginDenied = "login_denied"
 	ActionLogout      = "logout"
+
+	ActionSecretImport     = "secret.import"
+	ActionSecretUnimport   = "secret.unimport"
+	ActionSecretTagsUpdate = "secret.tags_update"
+	ActionSecretReveal     = "secret.reveal"
+	ActionSecretUpdate     = "secret.update"
+
+	ActionRoleCreate = "role.create"
+	ActionRoleUpdate = "role.update"
+	ActionRoleDelete = "role.delete"
+
+	ActionUserRoleAssign = "user.role_assign"
+	ActionUserRoleRemove = "user.role_remove"
+	ActionUserDisable    = "user.disable"
+	ActionUserEnable     = "user.enable"
 )
 
 // Results.

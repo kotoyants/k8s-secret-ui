@@ -3,19 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
   <title>Secret Manager</title>
+  <link rel="stylesheet" href="/static/pico.min.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
 </head>
-<body>
-  <header>
-    <strong>Secret Manager</strong>
-    {{with .Principal}}
-      <span>{{.User.Email}}{{if .IsAdmin}} (admin){{end}}</span>
-      <form method="post" action="/auth/logout">
-        <button type="submit">Log out</button>
-      </form>
-    {{end}}
+<body hx-boost="true">
+  <header class="container">
+    <nav>
+      <ul><li><a href="/" class="brand"><strong>Secret Manager</strong></a></li></ul>
+      {{with .Principal}}
+      <ul>
+        <li><a href="/" {{if eq $.Nav "home"}}aria-current="page"{{end}}>Secrets</a></li>
+        {{if .IsAdmin}}
+        <li><a href="/admin/users" {{if eq $.Nav "users"}}aria-current="page"{{end}}>Users</a></li>
+        <li><a href="/admin/roles" {{if eq $.Nav "roles"}}aria-current="page"{{end}}>Roles</a></li>
+        <li><a href="/admin/secrets" {{if eq $.Nav "secrets"}}aria-current="page"{{end}}>Imported</a></li>
+        <li><a href="/admin/import" {{if eq $.Nav "import"}}aria-current="page"{{end}}>Import</a></li>
+        {{end}}
+        <li><small class="muted">{{.User.Email}}</small></li>
+        <li>
+          <form method="post" action="/auth/logout" class="inline">
+            <button type="submit" class="secondary outline small">Log out</button>
+          </form>
+        </li>
+      </ul>
+      {{end}}
+    </nav>
   </header>
-  <main>
+  <main class="container">
+    {{with .Flash}}<p class="flash flash-{{.Kind}}" role="{{if eq .Kind "error"}}alert{{else}}status{{end}}">{{.Msg}}</p>{{end}}
     {{template "content" .}}
   </main>
 </body>

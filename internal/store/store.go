@@ -228,6 +228,35 @@ func (s *Store) SetSecretTags(ctx context.Context, secretID int64, in []string) 
 	})
 }
 
+// UpdateRoleWithTags changes a role's name, permission and tags. Built-in roles cannot be changed.
+func (s *Store) UpdateRoleWithTags(ctx context.Context, id int64, name string, perm db.RolePermission, in []string) error {
+	t, err := tags.Normalize(in)
+	if err != nil {
+		return err
+	}
+	return s.InTx(ctx, func(q *db.Queries) error {
+		role, err := q.GetRole(ctx, id)
+		if err != nil {
+			return mapErr(err)
+		}
+		if role.Builtin {
+			return ErrBuiltinRole
+		}
+		if _, err := q.UpdateRole(ctx, db.UpdateRoleParams{ID: id, Name: name, Permission: perm}); err != nil {
+			return mapErr(err)
+		}
+		if err := q.DeleteRoleTags(ctx, id); err != nil {
+			return err
+		}
+		return q.InsertRoleTags(ctx, db.InsertRoleTagsParams{RoleID: id, Tags: t})
+	})
+}
+
+// IsNotFound reports whether err means "no such row" (from generated queries or store methods).
+func IsNotFound(err error) bool {
+	return errors.Is(err, ErrNotFound) || errors.Is(err, pgx.ErrNoRows)
+}
+
 // mapErr converts driver errors into store sentinel errors.
 func mapErr(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {

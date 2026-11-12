@@ -226,6 +226,33 @@ func TestRolesAndTags(t *testing.T) {
 	}
 }
 
+func TestUpdateRoleWithTags(t *testing.T) {
+	s := newStore(t)
+	ctx := t.Context()
+	id, _ := s.CreateRoleWithTags(ctx, "r1", db.RolePermissionRead, []string{"a"})
+	_, _ = s.CreateRoleWithTags(ctx, "r2", db.RolePermissionRead, nil)
+
+	if err := s.UpdateRoleWithTags(ctx, id, "r1-new", db.RolePermissionReadWrite, []string{"b", "c"}); err != nil {
+		t.Fatal(err)
+	}
+	r, _ := s.GetRole(ctx, id)
+	if r.Name != "r1-new" || r.Permission != db.RolePermissionReadWrite || !slices.Equal(r.Tags, []string{"b", "c"}) {
+		t.Fatalf("role = %+v", r)
+	}
+	if err := s.UpdateRoleWithTags(ctx, id, "r2", db.RolePermissionRead, nil); !errors.Is(err, ErrConflict) {
+		t.Fatalf("rename to existing: err = %v", err)
+	}
+	if err := s.UpdateRoleWithTags(ctx, mustRoleID(t, s, RoleAdmin), "x", db.RolePermissionRead, nil); !errors.Is(err, ErrBuiltinRole) {
+		t.Fatalf("builtin: err = %v", err)
+	}
+	if err := s.UpdateRoleWithTags(ctx, 999999, "x", db.RolePermissionRead, nil); !IsNotFound(err) {
+		t.Fatalf("missing: err = %v", err)
+	}
+	if _, err := s.GetUserByID(ctx, 999999); !IsNotFound(err) {
+		t.Fatalf("IsNotFound(generated query) = false: %v", err)
+	}
+}
+
 func TestBuiltinRolesAreProtected(t *testing.T) {
 	s := newStore(t)
 	ctx := t.Context()

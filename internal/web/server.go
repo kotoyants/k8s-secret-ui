@@ -11,8 +11,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/kotoyants/k8s-secret-ui/internal/audit"
 	"github.com/kotoyants/k8s-secret-ui/internal/auth"
 	"github.com/kotoyants/k8s-secret-ui/internal/provider"
+	"github.com/kotoyants/k8s-secret-ui/internal/store"
 )
 
 // ReadinessCheck reports whether a dependency (e.g. the database) is ready to serve traffic.
@@ -26,18 +28,23 @@ type Deps struct {
 	Logger    *slog.Logger
 	Readiness []ReadinessCheck
 	Auth      *auth.Service
+	Store     *store.Store
 	Providers *provider.Registry
+	Audit     *audit.Logger
 	// Secure enables HSTS (set when BASE_URL is https).
 	Secure bool
 }
 
 type handlers struct {
-	log *slog.Logger
+	log       *slog.Logger
+	store     *store.Store
+	providers *provider.Registry
+	audit     *audit.Logger
 }
 
 // NewRouter builds the application's HTTP handler.
 func NewRouter(d Deps) http.Handler {
-	h := &handlers{log: d.Logger}
+	h := &handlers{log: d.Logger, store: d.Store, providers: d.Providers, audit: d.Audit}
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -49,6 +56,7 @@ func NewRouter(d Deps) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	r.Get("/readyz", readyHandler(d.Logger, d.Readiness))
+	r.Handle("/static/*", staticHandler())
 
 	r.Group(func(r chi.Router) {
 		// Rejects cross-origin state-changing requests (CSRF) using
@@ -65,6 +73,7 @@ func NewRouter(d Deps) http.Handler {
 			r.Use(auth.RequireUser)
 			r.Get("/", h.home)
 		})
+		r.Route("/admin", h.adminRoutes)
 	})
 
 	return r

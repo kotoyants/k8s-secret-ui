@@ -69,17 +69,21 @@ Makefile
 - [x] Tests with the `client-go` fake clientset (allow-list, type filter, conflict, RBAC forbidden, validation)
 
 ## Phase 5 — Admin UI
-- [ ] Layout, navigation, flash messages (htmx)
-- [ ] Users: list, assign or remove roles, disable or enable
-- [ ] Roles: CRUD, tags (autocomplete), permission, members
-- [ ] Import: browse namespaces → secrets, tag and import; mark already-imported and external (managed-by) secrets
-- [ ] Secrets: edit tags, un-import, "missing" status
-- [ ] Audit events for all admin actions
+- [x] Layout + navigation (Pico.css 2.1.1, htmx 2.0.11 vendored in `internal/web/static`; `hx-boost`, `hx-confirm`)
+- [x] Flash messages via short-lived cookie (POST → redirect → GET)
+- [x] Users: list, assign or remove roles, disable or enable (cannot disable yourself / drop your own admin role)
+- [x] Roles: create, edit (name, permission, tags), delete, members; built-in roles read-only
+- [x] Import: browse namespaces → secrets, tag and import; mark already-imported and external (managed-by) secrets;
+      import validated through the provider (allowed namespace, type, exists)
+- [x] Secrets: edit tags inline, un-import, "missing" status, external badge
+- [x] Audit events for all admin actions
+- [x] Tests: full admin flows on real Postgres + fake k8s (`internal/store/storetest`), access control, CSRF, no value leaks
 
 ## Phase 6 — User UI
 - [ ] Secret list (filtered by authz), filter by tag or namespace, search
 - [ ] Secret view: keys with masked values, reveal and copy per key (`no-store`), audit `secret.reveal`
-- [ ] Edit (read_write): edit, add or remove keys; handle conflicts; audit `secret.update`
+- [ ] Edit (read_write): edit, add or remove keys; handle conflicts; audit `secret.update`;
+      external secrets editable with a warning that the managing tool may overwrite changes
 
 ## Phase 7 — Deployment
 - [ ] Helm chart: Deployment (2+ replicas), Service, Ingress, ServiceAccount,

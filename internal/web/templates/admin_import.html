@@ -1,0 +1,43 @@
+{{define "content"}}
+{{with .Data}}
+<h1>Import secrets</h1>
+{{with .ListError}}<p class="flash flash-error" role="alert">{{.}}</p>{{end}}
+<p class="muted">Only <code>Opaque</code> secrets in allowed namespaces are listed. Secrets marked <em>external</em> are managed by
+another tool, which may overwrite changes made here.
+{{with .Tags}}Existing tags: {{join . ", "}}.{{end}}</p>
+
+{{range .Groups}}
+<h2>{{.Name}}</h2>
+<div class="overflow-auto">
+<table class="striped">
+  <thead><tr><th>Name</th><th>Keys</th><th>Managed by</th><th>Import</th></tr></thead>
+  <tbody>
+  {{range .Items}}
+    <tr>
+      <td>{{.Name}}</td>
+      <td>{{.Keys}}</td>
+      <td>{{with .ManagedBy}}<span class="badge-external">external: {{.}}</span>{{else}}<span class="muted">—</span>{{end}}</td>
+      <td>
+        {{if .Imported}}
+          <span class="muted">imported</span>
+        {{else}}
+        <form method="post" action="/admin/import" class="inline">
+          <input type="hidden" name="provider" value="{{.Provider}}">
+          <input type="hidden" name="locator" value="{{.Locator}}">
+          <fieldset role="group">
+            <input name="tags" placeholder="tags, e.g. front prod" aria-label="Tags for {{.Name}}">
+            <button type="submit" class="small">Import</button>
+          </fieldset>
+        </form>
+        {{end}}
+      </td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+  <p>No secrets found in the allowed namespaces.</p>
+{{end}}
+{{end}}
+{{end}}

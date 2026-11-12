@@ -1,0 +1,75 @@
+{{define "content"}}
+{{with .Data}}
+<p><a href="/admin/roles">← Roles</a></p>
+<h1>{{.Role.Name}}{{if .Role.Builtin}} <small class="muted">built-in</small>{{end}}</h1>
+
+{{if .Role.Builtin}}
+  {{if eq .Role.Name "admin"}}
+    <p>Admins have full access to all secrets and administration. This role cannot be changed.</p>
+  {{else}}
+    <p>New users get this role on first sign-in. It has no tags, so it grants no access. This role cannot be changed.</p>
+  {{end}}
+{{else}}
+<form method="post" action="/admin/roles/{{.Role.ID}}">
+  <div class="grid">
+    <label>Name <input name="name" required maxlength="64" value="{{.Role.Name}}"></label>
+    <label>Permission
+      <select name="permission">
+        <option value="read" {{if eq .Role.Permission "read"}}selected{{end}}>read</option>
+        <option value="read_write" {{if eq .Role.Permission "read_write"}}selected{{end}}>read_write</option>
+      </select>
+    </label>
+  </div>
+  <label>Tags <input name="tags" value="{{.TagsStr}}">
+    <small>Comma or space separated. {{with .Tags}}Existing: {{join . ", "}}{{end}}</small>
+  </label>
+  <button type="submit">Save</button>
+</form>
+{{end}}
+
+<h2>Members</h2>
+<table>
+  <thead><tr><th>Email</th><th>Name</th><th></th></tr></thead>
+  <tbody>
+  {{$role := .Role}}{{$me := .MyID}}
+  {{range .Members}}
+    <tr>
+      <td><a href="/admin/users/{{.ID}}">{{.Email}}</a>{{if .Disabled}} <span class="status-bad">disabled</span>{{end}}</td>
+      <td>{{.Name}}</td>
+      <td class="actions">
+        {{if and (eq .ID $me) $role.Builtin (eq $role.Name "admin")}}
+          <small class="muted">you</small>
+        {{else}}
+        <form method="post" action="/admin/roles/{{$role.ID}}/members/{{.ID}}/remove" class="inline"
+              hx-confirm="Remove {{.Email}} from {{$role.Name}}?">
+          <button type="submit" class="secondary outline small">Remove</button>
+        </form>
+        {{end}}
+      </td>
+    </tr>
+  {{else}}
+    <tr><td colspan="3">No members.</td></tr>
+  {{end}}
+  </tbody>
+</table>
+
+{{with .NonMember}}
+<form method="post" action="/admin/roles/{{$role.ID}}/members">
+  <fieldset role="group">
+    <select name="user_id" required aria-label="User to add">
+      <option value="" selected disabled>Add a user…</option>
+      {{range .}}<option value="{{.ID}}">{{.Email}}</option>{{end}}
+    </select>
+    <button type="submit">Add</button>
+  </fieldset>
+</form>
+{{end}}
+
+{{if not .Role.Builtin}}
+<h2>Delete</h2>
+<form method="post" action="/admin/roles/{{.Role.ID}}/delete" hx-confirm="Delete role {{.Role.Name}}? Members lose the access it grants.">
+  <button type="submit" class="contrast">Delete role</button>
+</form>
+{{end}}
+{{end}}
+{{end}}
