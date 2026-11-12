@@ -77,7 +77,7 @@ The chart is published as an OCI artifact for every release `X.Y.Z`:
 
 ```sh
 helm upgrade --install secrets-ui oci://ghcr.io/kotoyants/charts/secrets-ui \
-  --version 0.3.6 --namespace admin -f values-prod.yaml
+  --version 0.4.0 --namespace admin -f values-prod.yaml
 ```
 
 Terraform (`helm_release`):
@@ -88,7 +88,7 @@ resource "helm_release" "secrets_ui" {
   namespace  = "admin"
   repository = "oci://ghcr.io/kotoyants/charts"
   chart      = "secrets-ui"
-  version    = "0.3.6"
+  version    = "0.4.0"
   values     = [file("values-prod.yaml")]
 }
 ```
