@@ -90,17 +90,20 @@ Makefile
 - [x] Tests: visibility matrix, reveal (page + fragment), edit flows, conflict, external, missing, binary; mutation-checked
 
 ## Phase 7 — Deployment
-- [ ] Helm chart: Deployment (2+ replicas), Service, Ingress, ServiceAccount,
-      per-namespace Role/RoleBinding from `allowedNamespaces`, env from a k8s Secret
-- [ ] Probes, resource limits, `readOnlyRootFilesystem`, `runAsNonRoot`
-- [ ] Local end-to-end run with `kind` + docker-compose Postgres
-- [ ] README: Google OAuth client setup, deploying to DOKS
+- [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,
+      per-namespace Role/RoleBinding from `config.allowedNamespaces`, env from `existingSecret`; optional Ingress (off)
+- [x] Probes, resource limits, `readOnlyRootFilesystem`, `runAsNonRoot`, dropped capabilities, seccomp
+- [x] Required-value validation; `values-prod.example.yaml` (namespace `admin`, host secrets.prod.nexora.promo)
+- [x] `make helm-lint` (helm lint + kubeconform)
+- [x] README: Google OAuth client setup, Terraform prerequisites, deploying
+- [x] GitHub Actions (moved up from Phase 8): test, lint, sqlc-check, helm checks, build & push image to GHCR;
+      on `v*` tags also publish the chart to `oci://ghcr.io/kotoyants/charts`
+- [ ] First deploy to DOKS (namespaces, DB, Secret, Ingress via Terraform; then `helm upgrade --install`)
 
 ## Phase 8 — Hardening & polish
 - [ ] Rate limiting on login and reveal
 - [ ] Real client IP for audit behind the ingress (trusted proxy / `X-Forwarded-For` config)
 - [ ] CSP review, dependency scan (`govulncheck`)
-- [ ] GitHub Actions: lint, test, build and push image (GHCR)
 
 ## Later (not v1)
 - More providers (AWS Secrets Manager, GCP, Vault), multiple clusters

@@ -1,0 +1,80 @@
+# Default values for k8s-secret-ui.
+#
+# Required:
+#   config.baseURL            public URL, e.g. https://secrets.example.com
+#   config.allowedNamespaces  namespaces whose secrets the app may manage (must already exist)
+#   existingSecret            name of a Secret in the release namespace with keys:
+#                               DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/kotoyants/k8s-secret-ui
+  # Defaults to .Chart.AppVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Overrides the resource names (Service, Deployment, ...). Set it to get a fixed
+# Service name for an Ingress managed outside this chart.
+nameOverride: ""
+fullnameOverride: ""
+
+config:
+  baseURL: ""
+  # Google Workspace domains allowed to sign in; empty = any Google account.
+  allowedDomains: []
+  # Emails that get the admin role on sign-in.
+  adminEmails: []
+  allowedNamespaces: []
+  sessionTTL: 8h
+  logLevel: info
+
+# Secret (not managed by this chart) with DATABASE_URL, GOOGLE_CLIENT_ID,
+# GOOGLE_CLIENT_SECRET and SESSION_SECRET.
+existingSecret: ""
+
+serviceAccount:
+  create: true
+  # Defaults to the full name.
+  name: ""
+  annotations: {}
+
+rbac:
+  # Creates a Role + RoleBinding in each allowed namespace granting
+  # get/list/update on secrets to the service account. No cluster-wide access.
+  create: true
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Usually the Ingress is managed outside the chart (e.g. Terraform). Point it at
+# the Service "<fullname>" port "http" (service.port).
+ingress:
+  enabled: false
+  className: traefik
+  host: ""
+  annotations: {}
+  tls:
+    enabled: true
+    # Defaults to "<fullname>-tls".
+    secretName: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

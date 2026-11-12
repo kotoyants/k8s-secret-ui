@@ -11,7 +11,7 @@ include .env
 export
 endif
 
-.PHONY: help run build test test-race cover lint fmt tidy sqlc sqlc-check migrate docker db-up db-down clean
+.PHONY: help run build test test-race cover lint fmt tidy sqlc sqlc-check migrate docker helm-lint db-up db-down clean
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -59,6 +59,12 @@ migrate: ## Apply migrations to DATABASE_URL (the app also does this at startup)
 
 docker: ## Build the Docker image
 	docker build -t $(IMAGE):$(VERSION) .
+
+helm-lint: ## Lint and schema-validate the Helm chart (kubeconform via Docker)
+	helm lint deploy/helm/k8s-secret-ui -f deploy/helm/values-prod.example.yaml
+	helm template k8s-secret-ui deploy/helm/k8s-secret-ui -n admin -f deploy/helm/values-prod.example.yaml \
+		--set ingress.enabled=true --set ingress.host=example.com \
+	| docker run --rm -i ghcr.io/yannh/kubeconform:v0.8.0 -strict -summary -
 
 db-up: ## Start local Postgres
 	docker compose up -d postgres
