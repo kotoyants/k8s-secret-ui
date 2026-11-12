@@ -20,6 +20,8 @@ import (
 	"github.com/kotoyants/k8s-secret-ui/internal/audit"
 	"github.com/kotoyants/k8s-secret-ui/internal/auth"
 	"github.com/kotoyants/k8s-secret-ui/internal/config"
+	"github.com/kotoyants/k8s-secret-ui/internal/provider"
+	"github.com/kotoyants/k8s-secret-ui/internal/provider/k8s"
 	"github.com/kotoyants/k8s-secret-ui/internal/store"
 	"github.com/kotoyants/k8s-secret-ui/internal/web"
 )
@@ -110,12 +112,23 @@ func serve(ctx context.Context) error {
 		return err
 	}
 
+	kube, kubeWhere, err := k8s.NewClient(cfg.KubeContext)
+	if err != nil {
+		return err
+	}
+	providers, err := provider.NewRegistry(k8s.New(kube, cfg.AllowedNamespaces))
+	if err != nil {
+		return err
+	}
+	log.Info("kubernetes provider ready", "via", kubeWhere, "namespaces", cfg.AllowedNamespaces)
+
 	srv := &http.Server{
 		Addr: cfg.ListenAddr,
 		Handler: web.NewRouter(web.Deps{
 			Logger:    log,
 			Readiness: []web.ReadinessCheck{{Name: "database", Check: st.Ping}},
 			Auth:      authSvc,
+			Providers: providers,
 			Secure:    cfg.BaseURL.Scheme == "https",
 		}),
 		ReadHeaderTimeout: 5 * time.Second,

@@ -119,6 +119,11 @@ type SecretData struct { Values map[string][]byte; Version string }   // Version
 - RBAC: a `Role` + `RoleBinding` **per allowed namespace** with `get, list, update` on `secrets`.
   No ClusterRole.
 - Only `Opaque` secrets are listed (no service-account tokens, TLS or docker-config secrets).
+- **External secrets:** secrets managed by another tool are shown and marked as *external* with the
+  manager's name (owner reference kind such as `ExternalSecret`/`SealedSecret`, or Helm, Argo CD, Flux).
+  Changes made here may be overwritten by that tool, and the UI warns about it.
+- Outside a cluster (local development) the kubeconfig context must be named explicitly with `KUBE_CONTEXT`;
+  the current kubectl context is never used implicitly.
 
 ## 7. Audit log
 
@@ -153,6 +158,8 @@ type SecretData struct { Values map[string][]byte; Version string }   // Version
 | `ALLOWED_DOMAINS` | comma-separated; empty = any Google account |
 | `ADMIN_EMAILS` | comma-separated bootstrap admins |
 | `ALLOWED_NAMESPACES` | comma-separated k8s namespaces |
+| `KUBE_CONTEXT` | kubeconfig context; only used outside a cluster (local dev) |
+| `LOG_LEVEL` | default `info` |
 | `LISTEN_ADDR` | default `:8080` |
 
 ## 10. Non-functional

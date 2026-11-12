@@ -24,6 +24,7 @@ type Config struct {
 	AllowedDomains     []string
 	AdminEmails        []string
 	AllowedNamespaces  []string
+	KubeContext        string // only used outside a cluster (local development)
 	LogLevel           slog.Level
 }
 
@@ -47,6 +48,7 @@ func Load(getenv func(string) string) (*Config, error) {
 		AllowedDomains:     lowerAll(splitList(getenv("ALLOWED_DOMAINS"))),
 		AdminEmails:        lowerAll(splitList(getenv("ADMIN_EMAILS"))),
 		AllowedNamespaces:  splitList(getenv("ALLOWED_NAMESPACES")),
+		KubeContext:        strings.TrimSpace(getenv("KUBE_CONTEXT")),
 	}
 
 	if raw := required("BASE_URL"); raw != "" {

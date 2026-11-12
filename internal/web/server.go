@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/kotoyants/k8s-secret-ui/internal/auth"
+	"github.com/kotoyants/k8s-secret-ui/internal/provider"
 )
 
 // ReadinessCheck reports whether a dependency (e.g. the database) is ready to serve traffic.
@@ -25,6 +26,7 @@ type Deps struct {
 	Logger    *slog.Logger
 	Readiness []ReadinessCheck
 	Auth      *auth.Service
+	Providers *provider.Registry
 	// Secure enables HSTS (set when BASE_URL is https).
 	Secure bool
 }

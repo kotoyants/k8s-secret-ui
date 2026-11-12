@@ -61,16 +61,18 @@ Makefile
 - [x] Property test vs. an independent reference implementation (5000 random cases); 100% coverage; mutation-checked
 
 ## Phase 4 — Provider layer
-- [ ] `Provider` interface + registry
-- [ ] K8s provider: in-cluster config (kubeconfig fallback for local dev), `ALLOWED_NAMESPACES`,
-      list `Opaque` secrets, get, update with `resourceVersion`
-- [ ] Tests with the `client-go` fake clientset (namespace allowlist, type filter, conflict)
+- [x] `provider.Provider` interface (`List`/`Get`/`Update`), `SecretRef`, sentinel errors, `Registry`
+- [x] K8s provider: in-cluster config; outside a cluster requires explicit `KUBE_CONTEXT` (never the current context);
+      `ALLOWED_NAMESPACES` enforced on every call; `Opaque` only; update with `resourceVersion` optimistic locking;
+      key validation; metadata preserved; only the core/v1 client is used
+- [x] Detect externally managed secrets (owner refs, Helm, Argo CD, Flux) → `External.ManagedBy`
+- [x] Tests with the `client-go` fake clientset (allow-list, type filter, conflict, RBAC forbidden, validation)
 
 ## Phase 5 — Admin UI
 - [ ] Layout, navigation, flash messages (htmx)
 - [ ] Users: list, assign or remove roles, disable or enable
 - [ ] Roles: CRUD, tags (autocomplete), permission, members
-- [ ] Import: browse namespaces → secrets, tag and import; mark already-imported secrets
+- [ ] Import: browse namespaces → secrets, tag and import; mark already-imported and external (managed-by) secrets
 - [ ] Secrets: edit tags, un-import, "missing" status
 - [ ] Audit events for all admin actions
 

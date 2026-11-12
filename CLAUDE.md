@@ -23,7 +23,10 @@ Tooling runs in Docker; do not require local installs beyond Go + Docker.
 - The app is **stateless**: no in-memory sessions, caches or local files. All state is in Postgres or signed cookies.
 - Every secret access goes through `internal/authz`. Do not duplicate the tag logic elsewhere.
   Rule: secret.tags ⊆ union of the user's role tags (writes use only `read_write` roles). Admin bypasses it.
-- Provider-specific code stays in `internal/provider/<name>/`. The core uses only the `Provider` interface.
+- Provider-specific code stays in `internal/provider/<name>/`. The core uses only the `Provider` interface,
+  `provider.Registry` and the sentinel errors (`ErrNotFound`, `ErrConflict`, `ErrForbidden`, ...).
+- Local `make run` needs `KUBE_CONTEXT` set; the user's default kubectl context is **production** — never point
+  local runs or ad-hoc kubectl commands at it without asking.
 - DB schema changes = a new goose migration in `migrations/` (`NNNNN_name.sql`); never edit an applied migration.
 - Multi-statement DB operations go in `internal/store/store.go` using `InTx`; map driver errors with `mapErr`
   (`ErrNotFound`, `ErrConflict`, `ErrBuiltinRole`). Tags are always normalized via `internal/tags`.
