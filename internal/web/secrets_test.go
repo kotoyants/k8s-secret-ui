@@ -11,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 const apiValue = "t0p-s3cret"

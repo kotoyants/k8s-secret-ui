@@ -1,14 +1,14 @@
 # Example production values (namespace: admin). Ingress, namespaces, database and
 # the app Secret are created outside the chart (Terraform).
 #
-#   helm upgrade --install k8s-secret-ui deploy/helm/k8s-secret-ui \
+#   helm upgrade --install secrets-ui deploy/helm/secrets-ui \
 #     --namespace admin -f values-prod.yaml
 
 image:
   tag: "0.3.6"
 
-# Fixed Service name for the Terraform-managed Ingress: k8s-secret-ui:80 (port name "http").
-fullnameOverride: k8s-secret-ui
+# Fixed Service name for the Terraform-managed Ingress: secrets-ui:80 (port name "http").
+fullnameOverride: secrets-ui
 
 config:
   baseURL: https://secrets.prod.nexora.promo
@@ -19,4 +19,4 @@ config:
 
 # Secret in namespace "admin" with keys:
 #   DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
-existingSecret: k8s-secret-ui
+existingSecret: secrets-ui

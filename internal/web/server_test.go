@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth/authtest"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/auth/authtest"
 )
 
 type testApp struct {

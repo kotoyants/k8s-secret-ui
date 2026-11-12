@@ -1,6 +1,6 @@
-k8s-secret-ui is deployed in namespace {{ .Release.Namespace }}.
+secrets-ui is deployed in namespace {{ .Release.Namespace }}.
 
-Service:      {{ include "k8s-secret-ui.fullname" . }} (port {{ .Values.service.port }}, name "http")
+Service:      {{ include "secrets-ui.fullname" . }} (port {{ .Values.service.port }}, name "http")
 Public URL:   {{ .Values.config.baseURL }}
 Google OAuth redirect URI (must be registered in Google Cloud Console):
               {{ trimSuffix "/" .Values.config.baseURL }}/auth/callback

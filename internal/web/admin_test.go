@@ -15,13 +15,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth/authtest"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider/k8s"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/store/storetest"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/auth/authtest"
+	"github.com/kotoyants/secrets-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/provider/k8s"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store/storetest"
 )
 
 // fullApp is the router wired to a real Postgres store and a fake Kubernetes cluster.

@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/tags"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/tags"
 )
 
 //go:embed templates/*.html

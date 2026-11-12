@@ -1,15 +1,15 @@
-{{- include "k8s-secret-ui.validate" . }}
+{{- include "secrets-ui.validate" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "k8s-secret-ui.fullname" . }}
+  name: {{ include "secrets-ui.fullname" . }}
   labels:
-    {{- include "k8s-secret-ui.labels" . | nindent 4 }}
+    {{- include "secrets-ui.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "k8s-secret-ui.selectorLabels" . | nindent 6 }}
+      {{- include "secrets-ui.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -17,12 +17,12 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "k8s-secret-ui.selectorLabels" . | nindent 8 }}
+        {{- include "secrets-ui.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "k8s-secret-ui.serviceAccountName" . }}
+      serviceAccountName: {{ include "secrets-ui.serviceAccountName" . }}
       automountServiceAccountToken: true # needed to call the Kubernetes API
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

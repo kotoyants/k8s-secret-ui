@@ -1,9 +1,9 @@
-BINARY          := secret-manager
-IMAGE           ?= ghcr.io/kotoyants/k8s-secret-ui
+BINARY          := secrets-ui
+IMAGE           ?= ghcr.io/kotoyants/secrets-ui
 VERSION         ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 GOLANGCI_VERSION ?= v2.15.0
 SQLC_VERSION    ?= 1.31.1
-LINT_CACHE      ?= $(HOME)/.cache/k8s-secret-ui-lint
+LINT_CACHE      ?= $(HOME)/.cache/secrets-ui-lint
 
 # Load local env for `make run` if present.
 ifneq (,$(wildcard .env))
@@ -61,8 +61,8 @@ docker: ## Build the Docker image
 	docker build -t $(IMAGE):$(VERSION) .
 
 helm-lint: ## Lint and schema-validate the Helm chart (kubeconform via Docker)
-	helm lint deploy/helm/k8s-secret-ui -f deploy/helm/values-prod.example.yaml
-	helm template k8s-secret-ui deploy/helm/k8s-secret-ui -n admin -f deploy/helm/values-prod.example.yaml \
+	helm lint deploy/helm/secrets-ui -f deploy/helm/values-prod.example.yaml
+	helm template secrets-ui deploy/helm/secrets-ui -n admin -f deploy/helm/values-prod.example.yaml \
 		--set ingress.enabled=true --set ingress.host=example.com \
 	| docker run --rm -i ghcr.io/yannh/kubeconform:v0.8.0 -strict -summary -
 

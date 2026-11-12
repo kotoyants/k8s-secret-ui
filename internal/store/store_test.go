@@ -13,7 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 // testPool is shared by all tests in this package. Tests run sequentially and

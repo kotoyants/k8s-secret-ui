@@ -2,12 +2,12 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "k8s-secret-ui.fullname" . }}
+  name: {{ include "secrets-ui.fullname" . }}
   labels:
-    {{- include "k8s-secret-ui.labels" . | nindent 4 }}
+    {{- include "secrets-ui.labels" . | nindent 4 }}
 spec:
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "k8s-secret-ui.selectorLabels" . | nindent 6 }}
+      {{- include "secrets-ui.selectorLabels" . | nindent 6 }}
 {{- end }}

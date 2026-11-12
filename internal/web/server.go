@@ -11,10 +11,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/store"
 )
 
 // ReadinessCheck reports whether a dependency (e.g. the database) is ready to serve traffic.

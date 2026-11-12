@@ -1,4 +1,4 @@
-# k8s-secret-ui
+# secrets-ui
 
 A web app for managing Kubernetes secrets, with Google sign-in and tag-based access control.
 
@@ -44,12 +44,12 @@ To limit sign-in to your Google Workspace, set `ALLOWED_DOMAINS` (Helm: `config.
 
 ## Deployment
 
-Images are built by GitHub Actions and pushed to `ghcr.io/kotoyants/k8s-secret-ui`:
+Images are built by GitHub Actions and pushed to `ghcr.io/kotoyants/secrets-ui`:
 `latest` and `sha-<commit>` for `feat:`/`fix:` commits on `main`.
 
-**Releasing:** bump `version` and `appVersion` in `deploy/helm/k8s-secret-ui/Chart.yaml` (plus the examples in
+**Releasing:** bump `version` and `appVersion` in `deploy/helm/secrets-ui/Chart.yaml` (plus the examples in
 `values-prod.example.yaml` and this README) and push to `main`. When that version has no `vX.Y.Z` tag yet, the run
-also tags the image `X.Y.Z`, publishes the Helm chart to `oci://ghcr.io/kotoyants/charts/k8s-secret-ui` and creates
+also tags the image `X.Y.Z`, publishes the Helm chart to `oci://ghcr.io/kotoyants/charts/secrets-ui` and creates
 the `vX.Y.Z` git tag. Don't push release tags by hand.
 
 > The first push creates each GHCR package (image and chart) as **private**. Make them public once in
@@ -68,39 +68,39 @@ the `vX.Y.Z` git tag. Don't push release tags by hand.
    | `GOOGLE_CLIENT_SECRET` | OAuth client secret |
    | `SESSION_SECRET` | random, at least 32 bytes (e.g. `openssl rand -base64 48`) |
 
-4. **Ingress** with TLS for your host, routing `/` to Service `k8s-secret-ui`, port `80`
-   (port name `http`), when `fullnameOverride: k8s-secret-ui` is set.
+4. **Ingress** with TLS for your host, routing `/` to Service `secrets-ui`, port `80`
+   (port name `http`), when `fullnameOverride: secrets-ui` is set.
 
 ### Install
 
 The chart is published as an OCI artifact for every release `X.Y.Z`:
 
 ```sh
-helm upgrade --install k8s-secret-ui oci://ghcr.io/kotoyants/charts/k8s-secret-ui \
+helm upgrade --install secrets-ui oci://ghcr.io/kotoyants/charts/secrets-ui \
   --version 0.3.6 --namespace admin -f values-prod.yaml
 ```
 
 Terraform (`helm_release`):
 
 ```hcl
-resource "helm_release" "k8s_secret_ui" {
-  name       = "k8s-secret-ui"
+resource "helm_release" "secrets_ui" {
+  name       = "secrets-ui"
   namespace  = "admin"
   repository = "oci://ghcr.io/kotoyants/charts"
-  chart      = "k8s-secret-ui"
+  chart      = "secrets-ui"
   version    = "0.3.6"
   values     = [file("values-prod.yaml")]
 }
 ```
 
-From a checkout: `helm upgrade --install k8s-secret-ui deploy/helm/k8s-secret-ui -n admin -f values-prod.yaml`.
+From a checkout: `helm upgrade --install secrets-ui deploy/helm/secrets-ui -n admin -f values-prod.yaml`.
 
 The chart creates the Deployment (non-root, read-only filesystem), the Service, a ServiceAccount, a
 PodDisruptionBudget, and in **each allowed namespace** a Role + RoleBinding with `get/list/update` on secrets.
 It creates no cluster-wide permissions. The Ingress is optional (`ingress.enabled`, off by default).
 
 Changing the app Secret does not restart pods automatically; run
-`kubectl -n admin rollout restart deployment/k8s-secret-ui` afterwards.
+`kubectl -n admin rollout restart deployment/secrets-ui` afterwards.
 
 ### Audit log
 

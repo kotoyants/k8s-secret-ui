@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Repo: `github.com/kotoyants/k8s-secret-ui` (Go module path).
+Repo: `github.com/kotoyants/secrets-ui` (Go module path).
 Web app for managing Kubernetes secrets with Google login and tag-based roles.
 - Requirements: `SPEC.md` (source of truth: update it when requirements change)
 - Roadmap and progress: `PLAN.md` (tick off checkboxes as work completes)

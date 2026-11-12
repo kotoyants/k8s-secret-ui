@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
-  <title>Secret Manager</title>
+  <title>Secrets UI</title>
   <link rel="stylesheet" href="{{asset "pico.min.css"}}">
   <link rel="stylesheet" href="{{asset "app.css"}}">
   <script src="{{asset "htmx.min.js"}}" defer></script>
@@ -14,7 +14,7 @@
 <body hx-boost="true">
   <header class="container">
     <nav>
-      <ul><li><a href="/" class="brand"><strong>Secret Manager</strong></a></li></ul>
+      <ul><li><a href="/" class="brand"><strong>Secrets UI</strong></a></li></ul>
       {{with .Principal}}
       <ul>
         <li><a href="/" {{if eq $.Nav "home"}}aria-current="page"{{end}}>Secrets</a></li>

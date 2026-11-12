@@ -5,9 +5,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 const (

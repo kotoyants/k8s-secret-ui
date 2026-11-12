@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/provider"
 )
 
 // ID is the provider ID stored with imported Kubernetes secrets.

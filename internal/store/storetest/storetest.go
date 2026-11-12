@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store"
 )
 
 var (

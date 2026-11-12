@@ -1,9 +1,9 @@
-// Command secret-manager runs the k8s-secret-ui web application.
+// Command secrets-ui runs the secrets-ui web application.
 //
 // Usage:
 //
-//	secret-manager           start the web server (applies migrations first)
-//	secret-manager migrate   apply database migrations and exit (needs only DATABASE_URL)
+//	secrets-ui           start the web server (applies migrations first)
+//	secrets-ui migrate   apply database migrations and exit (needs only DATABASE_URL)
 package main
 
 import (
@@ -17,13 +17,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/config"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider/k8s"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/web"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/config"
+	"github.com/kotoyants/secrets-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/provider/k8s"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/web"
 )
 
 const (

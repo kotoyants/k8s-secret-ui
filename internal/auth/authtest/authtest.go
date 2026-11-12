@@ -19,8 +19,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 // Identity is the Google account the fake IdP "logs in" as.

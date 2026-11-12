@@ -14,12 +14,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/auth"
-	"github.com/kotoyants/k8s-secret-ui/internal/authz"
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/auth"
+	"github.com/kotoyants/secrets-ui/internal/authz"
+	"github.com/kotoyants/secrets-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 // newKeyRows is the number of empty "add key" rows on the edit form.

@@ -17,9 +17,9 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/audit"
-	"github.com/kotoyants/k8s-secret-ui/internal/store"
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/audit"
+	"github.com/kotoyants/secrets-ui/internal/store"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
 )
 
 // GoogleIssuer is the OIDC issuer URL of Google accounts.
@@ -29,7 +29,7 @@ const (
 	sessionCookie = "sm_session"
 	stateCookie   = "sm_oauth" //nolint:gosec // G101: cookie name, not a credential
 	stateTTL      = 10 * time.Minute
-	tokenIssuer   = "k8s-secret-ui" //nolint:gosec // G101: JWT "iss" value, not a credential
+	tokenIssuer   = "secrets-ui" //nolint:gosec // G101: JWT "iss" value, not a credential
 	audSession    = "session"
 	audState      = "oauth-state"
 	callbackPath  = "/auth/callback"

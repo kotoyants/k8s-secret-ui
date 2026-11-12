@@ -1,4 +1,4 @@
-# Secret Manager — Specification (v1.0)
+# Secrets UI — Specification (v1.0)
 
 ## 1. Purpose
 

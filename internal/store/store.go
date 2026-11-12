@@ -15,9 +15,9 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/lock"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/store/db"
-	"github.com/kotoyants/k8s-secret-ui/internal/tags"
-	"github.com/kotoyants/k8s-secret-ui/migrations"
+	"github.com/kotoyants/secrets-ui/internal/store/db"
+	"github.com/kotoyants/secrets-ui/internal/tags"
+	"github.com/kotoyants/secrets-ui/migrations"
 )
 
 // Names of the built-in roles (seeded by the initial migration).

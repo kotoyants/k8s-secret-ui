@@ -1,4 +1,4 @@
-module github.com/kotoyants/k8s-secret-ui
+module github.com/kotoyants/secrets-ui
 
 go 1.27.3
 

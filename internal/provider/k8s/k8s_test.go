@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 
-	"github.com/kotoyants/k8s-secret-ui/internal/provider"
+	"github.com/kotoyants/secrets-ui/internal/provider"
 )
 
 func secret(ns, name string, typ corev1.SecretType, data map[string]string, mod ...func(*corev1.Secret)) *corev1.Secret {

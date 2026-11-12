@@ -1,11 +1,11 @@
-# Secret Manager — Implementation Plan
+# Secrets UI — Implementation Plan
 
 See `SPEC.md` for requirements. Each phase ends in a working, tested state.
 
 ## Project layout
 
 ```
-cmd/secret-manager/main.go        # wiring, config, server start
+cmd/secrets-ui/main.go        # wiring, config, server start
 internal/config/                  # env parsing + validation
 internal/auth/                    # Google OIDC, JWT session cookie, middleware, CSRF
 internal/authz/                   # tag-matching rules (pure functions)
@@ -18,7 +18,7 @@ internal/web/                     # handlers, routing, view models
 internal/web/templates/           # html/template files (embedded)
 internal/web/static/              # htmx, css (embedded)
 migrations/                       # goose SQL migrations (embedded)
-deploy/helm/secret-manager/       # Helm chart
+deploy/helm/secrets-ui/       # Helm chart
 docker-compose.yml                # local Postgres
 Makefile
 ```
@@ -40,7 +40,7 @@ Makefile
   - `secrets(id, provider, locator JSONB, created_at, created_by)` with `UNIQUE(provider, locator)`
   - `secret_tags(secret_id, tag)`
   - seed the built-in `admin` and `default` roles
-- [x] sqlc queries + generated code (`make sqlc` via Docker); migrations run at startup (advisory lock) and via `secret-manager migrate`
+- [x] sqlc queries + generated code (`make sqlc` via Docker); migrations run at startup (advisory lock) and via `secrets-ui migrate`
 - [x] Store tests against real Postgres (testcontainers; `-short` skips them)
 - [x] `internal/tags`: tag validation/normalization shared by store and UI
 
@@ -98,9 +98,11 @@ Makefile
       masked/unchanged fields show a "••••••••" placeholder (also after Hide on the edit page)
 - [x] Double-click copies masked values too (`reveal?for=copy`, plain text, audited); static assets served with
       content-hash `?v=` URLs (cached immutable) so a release never leaves browsers on stale CSS/JS
+- [x] Renamed project k8s-secret-ui / secret-manager → secrets-ui (repo, Go module, chart, image, binary, UI title
+      "Secrets UI", JWT issuer, prod example values); released as 0.4.0
 
 ## Phase 7 — Deployment
-- [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,
+- [x] Helm chart `deploy/helm/secrets-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,
       per-namespace Role/RoleBinding from `config.allowedNamespaces`, env from `existingSecret`; optional Ingress (off)
 - [x] Probes, resource limits, `readOnlyRootFilesystem`, `runAsNonRoot`, dropped capabilities, seccomp
 - [x] Required-value validation; `values-prod.example.yaml` (namespace `admin`, host secrets.prod.nexora.promo)
