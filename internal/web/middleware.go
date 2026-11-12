@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -39,7 +40,7 @@ func recoverer(log *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if rec := recover(); rec != nil {
-					if rec == http.ErrAbortHandler {
+					if err, ok := rec.(error); ok && errors.Is(err, http.ErrAbortHandler) {
 						panic(rec)
 					}
 					log.ErrorContext(r.Context(), "panic in handler",

@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"errors"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -12,14 +11,14 @@ import (
 
 func newTestRouter(checks ...ReadinessCheck) http.Handler {
 	return NewRouter(Deps{
-		Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Logger:    slog.New(slog.DiscardHandler),
 		Readiness: checks,
 	})
 }
 
 func TestHealthz(t *testing.T) {
 	rec := httptest.NewRecorder()
-	newTestRouter().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	newTestRouter().ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rec.Code)
 	}
@@ -41,7 +40,7 @@ func TestReadyz(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			newTestRouter(tt.checks...).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+			newTestRouter(tt.checks...).ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/readyz", nil))
 			if rec.Code != tt.want {
 				t.Fatalf("status = %d, want %d", rec.Code, tt.want)
 			}
@@ -50,10 +49,10 @@ func TestReadyz(t *testing.T) {
 }
 
 func TestRecovererReturns500(t *testing.T) {
-	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	log := slog.New(slog.DiscardHandler)
 	h := recoverer(log)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") }))
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want 500", rec.Code)
 	}
