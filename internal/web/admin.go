@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"net/http"
 	"slices"
 	"strconv"
@@ -41,7 +40,6 @@ func (h *handlers) adminRoutes(r chi.Router) {
 	r.Post("/roles/{id}/members", h.adminRoleAddMember)
 	r.Post("/roles/{id}/members/{userID}/remove", h.adminRoleRemoveMember)
 
-	r.Get("/secrets", h.adminSecrets)
 	r.Post("/secrets/{id}", h.adminSecretUpdateTags)
 	r.Post("/secrets/{id}/delete", h.adminSecretDelete)
 
@@ -433,22 +431,33 @@ func (h *handlers) adminRoleRemoveMember(w http.ResponseWriter, r *http.Request)
 	h.done(w, r, "/admin/roles/"+idStr(roleID), "Member removed.", h.unassignRole(r, userID, roleID))
 }
 
-// ---- imported secrets ------------------------------------------------------
+// ---- import: imported and available secrets ---------------------------------
 
-type secretRow struct {
+// importedRow is a secret already imported into the app.
+type importedRow struct {
 	ID        int64
-	Provider  string
 	Group     string
 	Name      string
-	Tags      []string
 	TagsStr   string
 	Status    string // "ok", "missing", "unknown"
 	ManagedBy string
 }
 
-type secretsPage struct {
-	Secrets   []secretRow
+// availableRow is a provider secret that is not imported yet.
+type availableRow struct {
+	Provider  string
+	Group     string
+	Name      string
+	Keys      int
+	Locator   string // JSON, posted back on import
+	ManagedBy string
+}
+
+type importPage struct {
+	Imported  []importedRow
+	Available []availableRow
 	ListError string
+	Tags      []string
 }
 
 // providerIndex lists every provider's secrets, keyed by ref string. Providers that
@@ -472,23 +481,31 @@ func (h *handlers) providerIndex(r *http.Request) (map[string]provider.SecretInf
 	return index, failed, errs
 }
 
-func (h *handlers) adminSecrets(w http.ResponseWriter, r *http.Request) {
-	secrets, err := h.store.ListSecrets(r.Context())
+func (h *handlers) adminImport(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	secrets, err := h.store.ListSecrets(ctx)
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
+	page := importPage{}
+	if page.Tags, err = h.store.ListTags(ctx); err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	index, failed, errs := h.providerIndex(r)
-	page := secretsPage{ListError: strings.Join(errs, " ")}
+	page.ListError = strings.Join(errs, " ")
+
+	imported := map[string]bool{}
 	for _, s := range secrets {
-		row := secretRow{ID: s.ID, Provider: s.Provider, Tags: s.Tags, TagsStr: strings.Join(s.Tags, ", "), Status: "unknown"}
 		loc, err := decodeLocator(s.Locator)
 		if err != nil {
 			h.fail(w, r, err)
 			return
 		}
 		ref := provider.SecretRef{Provider: s.Provider, Locator: loc}
-		row.Name = ref.String()
+		imported[ref.String()] = true
+		row := importedRow{ID: s.ID, Name: ref.String(), TagsStr: strings.Join(s.Tags, ", "), Status: "unknown"}
 		if p, err := h.providers.Get(s.Provider); err == nil {
 			row.Group, row.Name = p.Describe(ref)
 		}
@@ -497,112 +514,24 @@ func (h *handlers) adminSecrets(w http.ResponseWriter, r *http.Request) {
 		} else if !failed[s.Provider] {
 			row.Status = "missing"
 		}
-		page.Secrets = append(page.Secrets, row)
+		page.Imported = append(page.Imported, row)
 	}
-	slices.SortFunc(page.Secrets, func(a, b secretRow) int {
-		return cmp.Or(cmp.Compare(a.Group, b.Group), cmp.Compare(a.Name, b.Name))
-	})
-	h.render(w, r, http.StatusOK, "admin_secrets", pageData{Nav: "secrets", Data: page})
-}
-
-func (h *handlers) adminSecretUpdateTags(w http.ResponseWriter, r *http.Request) {
-	id, err := pathID(r, "id")
-	if err != nil {
-		h.fail(w, r, err)
-		return
-	}
-	t, err := tags.Parse(r.PostFormValue("tags"))
-	if err == nil {
-		err = h.store.SetSecretTags(r.Context(), id, t)
-	}
-	if err == nil {
-		h.logAudit(r, audit.ActionSecretTagsUpdate, "secret", idStr(id), map[string]any{"tags": t})
-	}
-	h.done(w, r, "/admin/secrets", "Tags saved.", err)
-}
-
-func (h *handlers) adminSecretDelete(w http.ResponseWriter, r *http.Request) {
-	id, err := pathID(r, "id")
-	if err != nil {
-		h.fail(w, r, err)
-		return
-	}
-	sec, err := h.store.GetSecret(r.Context(), id)
-	if err == nil {
-		_, err = h.store.DeleteSecret(r.Context(), id)
-	}
-	if err == nil {
-		h.logAudit(r, audit.ActionSecretUnimport, "secret", idStr(id),
-			map[string]any{"provider": sec.Provider, "locator": string(sec.Locator)})
-	}
-	h.done(w, r, "/admin/secrets", "Secret removed from the app (it still exists in its storage).", err)
-}
-
-// ---- import ----------------------------------------------------------------
-
-type importRow struct {
-	Provider  string
-	Name      string
-	Keys      int
-	Locator   string // JSON, posted back on import
-	Imported  bool
-	ManagedBy string
-}
-
-type importGroup struct {
-	Name  string
-	Items []importRow
-}
-
-type importPage struct {
-	Groups    []importGroup
-	ListError string
-	Tags      []string
-}
-
-func (h *handlers) adminImport(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	page := importPage{}
-	var err error
-	if page.Tags, err = h.store.ListTags(ctx); err != nil {
-		h.fail(w, r, err)
-		return
-	}
-	var errs []string
-	byGroup := map[string][]importRow{}
-	for _, p := range h.providers.All() {
-		imported := map[string]bool{}
-		locs, err := h.store.ListSecretLocators(ctx, p.ID())
-		if err != nil {
-			h.fail(w, r, err)
-			return
-		}
-		for _, raw := range locs {
-			loc, err := decodeLocator(raw)
-			if err != nil {
-				h.fail(w, r, err)
-				return
-			}
-			imported[provider.SecretRef{Provider: p.ID(), Locator: loc}.String()] = true
-		}
-		list, err := p.List(ctx)
-		if err != nil {
-			h.log.WarnContext(ctx, "provider list failed", "provider", p.ID(), "err", err)
-			errs = append(errs, fmt.Sprintf("Could not list secrets from %q.", p.ID()))
+	for key, s := range index {
+		if imported[key] {
 			continue
 		}
-		for _, s := range list {
-			locJSON, _ := json.Marshal(s.Ref.Locator)
-			byGroup[s.Group] = append(byGroup[s.Group], importRow{
-				Provider: p.ID(), Name: s.Name, Keys: len(s.Keys), Locator: string(locJSON),
-				Imported: imported[s.Ref.String()], ManagedBy: s.ManagedBy,
-			})
-		}
+		locJSON, _ := json.Marshal(s.Ref.Locator)
+		page.Available = append(page.Available, availableRow{
+			Provider: s.Ref.Provider, Group: s.Group, Name: s.Name, Keys: len(s.Keys),
+			Locator: string(locJSON), ManagedBy: s.ManagedBy,
+		})
 	}
-	for _, g := range slices.Sorted(maps.Keys(byGroup)) {
-		page.Groups = append(page.Groups, importGroup{Name: g, Items: byGroup[g]})
-	}
-	page.ListError = strings.Join(errs, " ")
+	slices.SortFunc(page.Imported, func(a, b importedRow) int {
+		return cmp.Or(cmp.Compare(a.Group, b.Group), cmp.Compare(a.Name, b.Name))
+	})
+	slices.SortFunc(page.Available, func(a, b availableRow) int {
+		return cmp.Or(cmp.Compare(a.Group, b.Group), cmp.Compare(a.Name, b.Name))
+	})
 	h.render(w, r, http.StatusOK, "admin_import", pageData{Nav: "import", Data: page})
 }
 
@@ -635,4 +564,37 @@ func (h *handlers) adminImportSecret(w http.ResponseWriter, r *http.Request) {
 		return nil
 	}()
 	h.done(w, r, "/admin/import", "Secret imported.", err)
+}
+
+func (h *handlers) adminSecretUpdateTags(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	t, err := tags.Parse(r.PostFormValue("tags"))
+	if err == nil {
+		err = h.store.SetSecretTags(r.Context(), id, t)
+	}
+	if err == nil {
+		h.logAudit(r, audit.ActionSecretTagsUpdate, "secret", idStr(id), map[string]any{"tags": t})
+	}
+	h.done(w, r, "/admin/import", "Tags saved.", err)
+}
+
+func (h *handlers) adminSecretDelete(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	sec, err := h.store.GetSecret(r.Context(), id)
+	if err == nil {
+		_, err = h.store.DeleteSecret(r.Context(), id)
+	}
+	if err == nil {
+		h.logAudit(r, audit.ActionSecretUnimport, "secret", idStr(id),
+			map[string]any{"provider": sec.Provider, "locator": string(sec.Locator)})
+	}
+	h.done(w, r, "/admin/import", "Secret removed from the app (it still exists in its storage).", err)
 }

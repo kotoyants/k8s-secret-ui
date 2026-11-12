@@ -76,6 +76,8 @@ Makefile
 - [x] Import: browse namespaces → secrets, tag and import; mark already-imported and external (managed-by) secrets;
       import validated through the provider (allowed namespace, type, exists)
 - [x] Secrets: edit tags inline, un-import, "missing" status, external badge
+- [x] Import page merged with Imported: two lists (Imported with tag editing / un-import, Available to import);
+      `GET /admin/secrets` removed
 - [x] Audit events for all admin actions
 - [x] Tests: full admin flows on real Postgres + fake k8s (`internal/store/storetest`), access control, CSRF, no value leaks
 
@@ -88,6 +90,8 @@ Makefile
       optimistic locking (handler + provider); audit `secret.update` with key names (changed/added/removed)
 - [x] External secrets editable with a warning (edit page + after save)
 - [x] Tests: visibility matrix, reveal (page + fragment), edit flows, conflict, external, missing, binary; mutation-checked
+- [x] UI polish: "Reveal all" (view + edit), per-key reveal on the edit page prefills the textarea (htmx OOB swaps,
+      binary skipped, audited with key names); equal-height filter controls; fixed 100% base font (Pico upscales to 131%)
 
 ## Phase 7 — Deployment
 - [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,

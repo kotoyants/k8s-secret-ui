@@ -26,6 +26,8 @@ var staticFS embed.FS
 
 var funcs = template.FuncMap{
 	"join": strings.Join,
+	// lines is a textarea height for s: its line count, between 1 and 10.
+	"lines": func(s string) int { return min(max(strings.Count(s, "\n")+1, 1), 10) },
 	"time": func(t any) string {
 		switch v := t.(type) {
 		case time.Time:
@@ -46,7 +48,7 @@ var pages = map[string]*template.Template{}
 func init() {
 	for _, name := range []string{
 		"login", "error", "secrets", "secret", "secret_edit",
-		"admin_users", "admin_user", "admin_roles", "admin_role", "admin_secrets", "admin_import",
+		"admin_users", "admin_user", "admin_roles", "admin_role", "admin_import",
 	} {
 		pages[name] = template.Must(template.New("").Funcs(funcs).ParseFS(templateFS,
 			"templates/layout.html", "templates/"+name+".html"))

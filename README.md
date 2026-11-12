@@ -5,7 +5,7 @@ A web app for managing Kubernetes secrets, with Google sign-in and tag-based acc
 - Admins **import** existing `Opaque` secrets from allowed namespaces and put **tags** on them.
 - **Roles** have tags and a permission (`read` or `read_write`). A user can access a secret only if their
   roles together have **all** of the secret's tags.
-- Users reveal values one key at a time (every reveal is audited) and, with `read_write`, edit them.
+- Users reveal values per key or all at once (every reveal is audited) and, with `read_write`, edit them.
 - Secrets managed by other tools (External Secrets, Sealed Secrets, Helm, Argo CD, Flux) are marked *external*.
 - Stateless: any number of replicas. Data (users, roles, tags) lives in PostgreSQL; secret values never leave Kubernetes.
 

@@ -200,6 +200,84 @@ func TestSecretRevealBinary(t *testing.T) {
 	mustContain(t, body, "//4A", "(binary, base64)")
 }
 
+// htmxPost sends a form POST the way htmx does and returns the response body.
+func (f *secretsFixture) htmxPost(t *testing.T, c *http.Client, path, form string) (int, string) {
+	t.Helper()
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, f.srv.URL+path, strings.NewReader(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	resp, err := c.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	b, _ := io.ReadAll(resp.Body)
+	if cc := resp.Header.Get("Cache-Control"); resp.StatusCode == http.StatusOK && cc != "no-store" {
+		t.Errorf("Cache-Control = %q", cc)
+	}
+	return resp.StatusCode, string(b)
+}
+
+func TestSecretRevealAll(t *testing.T) {
+	f := newSecretsFixture(t)
+	s, _ := f.kube.CoreV1().Secrets("front").Get(t.Context(), "bin", metav1.GetOptions{})
+	s.Data["TEXT"] = []byte("\nfirst & <b>")
+	if _, err := f.kube.CoreV1().Secrets("front").Update(t.Context(), s, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	path := "/secrets/" + f.bin + "/reveal"
+
+	// View page offers Reveal all plus per-key Reveal.
+	_, body := f.do(t, f.admin, http.MethodGet, "/secrets/"+f.bin, nil)
+	mustContain(t, body, "Reveal all", `name="key" value="BLOB"`, `name="key" value="TEXT"`)
+
+	// Without JavaScript: full page with every value.
+	_, body = f.post(t, f.admin, path, url.Values{"all": {"1"}})
+	mustContain(t, body, "<html", "//4A", "first &amp; &lt;b&gt;")
+
+	// htmx: out-of-band value cells for every key.
+	code, frag := f.htmxPost(t, f.admin, path, "all=1")
+	if code != http.StatusOK || strings.Contains(frag, "<html") {
+		t.Fatalf("reveal all fragment = %d %s", code, frag)
+	}
+	mustContain(t, frag, `id="val-0" hx-swap-oob="true"`, `id="val-1" hx-swap-oob="true"`, "//4A")
+
+	// Edit mode: textareas prefilled; binary values are skipped (they can't be edited as text).
+	code, frag = f.htmxPost(t, f.admin, path+"?for=edit&all=1", "")
+	if code != http.StatusOK {
+		t.Fatalf("edit reveal all = %d", code)
+	}
+	mustContain(t, frag, `<textarea id="edit-val-1" name="value" rows="2"`, "hx-swap-oob=\"true\">\n\nfirst &amp; &lt;b&gt;</textarea>")
+	if strings.Contains(frag, "edit-val-0") {
+		t.Error("binary value offered for text editing")
+	}
+	code, frag = f.htmxPost(t, f.admin, path+"?for=edit&key=TEXT", "")
+	if code != http.StatusOK || !strings.Contains(frag, "edit-val-1") {
+		t.Fatalf("edit reveal key = %d %s", code, frag)
+	}
+	if code, _ = f.htmxPost(t, f.admin, path+"?for=edit&key=BLOB", ""); code != http.StatusNotFound {
+		t.Errorf("edit reveal of binary key = %d, want 404", code)
+	}
+
+	// Edit page: per-key Reveal only for text keys, plus Reveal all.
+	_, body = f.do(t, f.admin, http.MethodGet, "/secrets/"+f.bin+"/edit", nil)
+	mustContain(t, body, "for=edit&amp;all=1", "for=edit&amp;key=TEXT", `id="edit-val-0"`)
+	if strings.Contains(body, "key=BLOB") {
+		t.Error("reveal offered for a binary key on the edit page")
+	}
+
+	// No access → not found, nothing audited for it.
+	if code, _ := f.htmxPost(t, f.bob, path, "all=1"); code != http.StatusNotFound {
+		t.Errorf("bob reveal all = %d", code)
+	}
+
+	// Audited with key names, never values.
+	mustContain(t, f.audit.String(), `"keys":["BLOB","TEXT"]`, `"keys":["TEXT"]`)
+	if strings.Contains(f.audit.String(), "first") {
+		t.Fatal("secret value in audit log")
+	}
+}
+
 var versionRe = regexp.MustCompile(`name="version" value="([^"]*)"`)
 
 func (f *secretsFixture) editVersion(t *testing.T, c *http.Client, id string) string {

@@ -133,7 +133,7 @@ func mustContain(t *testing.T, body string, want ...string) {
 func TestAdminRequiresAdmin(t *testing.T) {
 	a := newFullApp(t)
 	bob := a.loginAs(t, "bob@corp.com")
-	for _, p := range []string{"/admin/users", "/admin/roles", "/admin/secrets", "/admin/import"} {
+	for _, p := range []string{"/admin/users", "/admin/roles", "/admin/import"} {
 		if resp, _ := a.do(t, bob, http.MethodGet, p, nil); resp.StatusCode != http.StatusForbidden {
 			t.Errorf("GET %s as user = %d, want 403", p, resp.StatusCode)
 		}
@@ -245,7 +245,7 @@ func TestAdminImportAndSecrets(t *testing.T) {
 	admin := a.loginAs(t, "admin@corp.com")
 
 	_, body := a.do(t, admin, http.MethodGet, "/admin/import", nil)
-	mustContain(t, body, "<h2>front</h2>", "api", "synced", "external: ExternalSecret")
+	mustContain(t, body, "<h2>Imported</h2>", "Nothing imported yet.", "<h2>Available</h2>", "<td>front</td>", "api", "synced", "external: ExternalSecret")
 	if strings.Contains(body, "kube-system") {
 		t.Error("secret from a non-allowed namespace is listed")
 	}
@@ -254,10 +254,15 @@ func TestAdminImportAndSecrets(t *testing.T) {
 	}
 
 	loc := `{"name":"api","namespace":"front"}`
+	mustContain(t, body, `value="{&#34;name&#34;:&#34;api&#34;`) // listed as available
 	_, body = a.post(t, admin, "/admin/import", url.Values{"provider": {"k8s"}, "locator": {loc}, "tags": {"front prod"}})
 	mustContain(t, body, "Secret imported.")
 	_, body = a.do(t, admin, http.MethodGet, "/admin/import", nil)
-	mustContain(t, body, `<span class="muted">imported</span>`)
+	// Moved from Available to Imported, with editable tags.
+	mustContain(t, body, `value="front, prod"`)
+	if strings.Contains(body, `value="{&#34;name&#34;:&#34;api&#34;`) {
+		t.Error("imported secret still listed as available")
+	}
 
 	// Re-import, forbidden namespace, bad input.
 	_, body = a.post(t, admin, "/admin/import", url.Values{"provider": {"k8s"}, "locator": {loc}})
@@ -274,8 +279,13 @@ func TestAdminImportAndSecrets(t *testing.T) {
 	// Import the external one too.
 	_, _ = a.post(t, admin, "/admin/import", url.Values{"provider": {"k8s"}, "locator": {`{"name":"synced","namespace":"front"}`}, "tags": {"front"}})
 
-	_, body = a.do(t, admin, http.MethodGet, "/admin/secrets", nil)
-	mustContain(t, body, `value="front, prod"`, "external: ExternalSecret")
+	_, body = a.do(t, admin, http.MethodGet, "/admin/import", nil)
+	mustContain(t, body, `value="front, prod"`, "external: ExternalSecret", "No secrets left to import")
+
+	// The old Imported page is gone.
+	if resp, _ := a.do(t, admin, http.MethodGet, "/admin/secrets", nil); resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("GET /admin/secrets = %d, want 404/405", resp.StatusCode)
+	}
 
 	secrets, _ := a.store.ListSecrets(t.Context())
 	var apiID string
@@ -292,7 +302,7 @@ func TestAdminImportAndSecrets(t *testing.T) {
 	if err := a.kube.CoreV1().Secrets("front").Delete(t.Context(), "api", metav1.DeleteOptions{}); err != nil {
 		t.Fatal(err)
 	}
-	_, body = a.do(t, admin, http.MethodGet, "/admin/secrets", nil)
+	_, body = a.do(t, admin, http.MethodGet, "/admin/import", nil)
 	mustContain(t, body, ">missing<")
 
 	_, body = a.post(t, admin, "/admin/secrets/"+apiID+"/delete", nil)

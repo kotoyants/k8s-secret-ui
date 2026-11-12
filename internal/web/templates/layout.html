@@ -21,7 +21,6 @@
         {{if .IsAdmin}}
         <li><a href="/admin/users" {{if eq $.Nav "users"}}aria-current="page"{{end}}>Users</a></li>
         <li><a href="/admin/roles" {{if eq $.Nav "roles"}}aria-current="page"{{end}}>Roles</a></li>
-        <li><a href="/admin/secrets" {{if eq $.Nav "secrets"}}aria-current="page"{{end}}>Imported</a></li>
         <li><a href="/admin/import" {{if eq $.Nav "import"}}aria-current="page"{{end}}>Import</a></li>
         {{end}}
         <li><small class="muted">{{.User.Email}}</small></li>

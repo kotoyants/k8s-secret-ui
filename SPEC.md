@@ -81,10 +81,10 @@ Admin only: import or un-import secrets, edit secret tags, manage roles and user
 ## 5. Features (v1)
 
 ### Admin
-1. **Import secrets:** browse the allowed namespaces → k8s Secrets (types `Opaque` only), select one, assign tags, import.
-   Already-imported secrets are marked.
-2. **Secrets:** edit tags, un-import (removes it from the app only; the k8s Secret is **not** deleted).
-   Show a "missing" status if the k8s Secret no longer exists.
+1. **Import** (one page, two lists):
+   - **Imported:** edit tags, un-import (removes it from the app only; the k8s Secret is **not** deleted).
+     Show a "missing" status if the k8s Secret no longer exists.
+   - **Available:** not-yet-imported k8s Secrets (types `Opaque` only) in the allowed namespaces; assign tags, import.
 3. **Roles:** create, rename, delete; set tags and permission; add or remove members.
 4. **Users:** list (email, name, roles, last login, status); assign or remove roles; disable or enable.
 5. **Tags:** created on the fly when typed on a role or secret; the list of existing tags is offered as autocomplete.
@@ -92,9 +92,12 @@ Admin only: import or un-import secrets, edit secret tags, manage roles and user
 ### User
 1. Log in with Google.
 2. List the secrets they can read (filter by tag or namespace, search by name).
-3. Open a secret: the key names are shown and values are **masked**; reveal or copy a value per key.
+3. Open a secret: the key names are shown and values are **masked**; reveal a value per key or all at once
+   ("Reveal all"), and copy it.
 4. With `read_write`: edit, add or remove keys and save, which updates the k8s Secret.
-   The edit form never shows current values: a blank value keeps the existing one.
+   The edit form hides current values by default: a blank value keeps the existing one. Each row is
+   key | value | Reveal | delete, with "Reveal all" above; Reveal loads the current value into the field (audited).
+   Binary values cannot be revealed for editing, only replaced.
    Secrets the user cannot read return 404, so their existence is not revealed.
    Uses `resourceVersion` for optimistic locking (conflict → error with a reload prompt).
 

@@ -49,3 +49,25 @@ nav button.small { margin: 0; }
 }
 .masked { letter-spacing: 0.1em; color: var(--pico-muted-color); }
 .key-row { margin-bottom: 0.5rem; }
+
+/* Compact sizing: Pico scales the root font up to 131% on wide screens; keep it
+   at a fixed base (this file loads after Pico, so it wins at every width) so pages look the same at 100% browser zoom as they
+   did at ~75%. Everything in Pico is rem-based, so spacing follows. */
+:root, :host { --pico-font-size: 100%; }
+:root {
+  --pico-form-element-spacing-vertical: 0.5rem;
+  --pico-form-element-spacing-horizontal: 0.75rem;
+}
+h1 { --pico-font-size: 1.75rem; }
+h2 { --pico-font-size: 1.35rem; }
+
+/* Secrets filter: all controls in one row with equal height. */
+.filters fieldset { margin-bottom: var(--pico-spacing); }
+.filters :is(input, select, button) { margin-bottom: 0; height: 100%; }
+.filters [type="search"] { border-radius: 0.25rem; }
+
+/* Edit page: key | value | reveal | delete on one line. */
+.edit-keys td { vertical-align: middle; }
+.edit-keys textarea { margin-bottom: 0; min-height: 0; }
+.edit-keys td:nth-child(2) { width: 60%; }
+.edit-keys td:last-child, .edit-keys th:last-child { text-align: center; width: 1%; }

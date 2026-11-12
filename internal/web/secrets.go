@@ -170,8 +170,9 @@ func displayValue(v []byte) (string, bool) {
 	return base64.StdEncoding.EncodeToString(v), true
 }
 
-// buildSecretPage reads the secret from its provider. Values are included only for revealKey.
-func (h *handlers) buildSecretPage(r *http.Request, s *accessible, revealKey string) (secretPage, error) {
+// buildSecretPage reads the secret from its provider. Values are included only
+// for keys where reveal returns true (reveal may be nil).
+func (h *handlers) buildSecretPage(r *http.Request, s *accessible, reveal func(key string) bool) (secretPage, error) {
 	page := secretPage{ID: s.Row.ID, Group: s.Group, Name: s.Name, Tags: s.Row.Tags, CanWrite: s.CanWrite}
 	data, err := s.Provider.Get(r.Context(), s.Ref)
 	switch {
@@ -184,7 +185,7 @@ func (h *handlers) buildSecretPage(r *http.Request, s *accessible, revealKey str
 	page.ManagedBy = data.ManagedBy
 	for i, k := range data.SortedKeys() {
 		kv := keyView{Index: i, Key: k}
-		if k == revealKey {
+		if reveal != nil && reveal(k) {
 			kv.Revealed = true
 			kv.Value, kv.Binary = displayValue(data.Values[k])
 		}
@@ -199,7 +200,7 @@ func (h *handlers) secretView(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, err)
 		return
 	}
-	page, err := h.buildSecretPage(r, s, "")
+	page, err := h.buildSecretPage(r, s, nil)
 	if err != nil {
 		h.fail(w, r, err)
 		return
@@ -207,33 +208,56 @@ func (h *handlers) secretView(w http.ResponseWriter, r *http.Request) {
 	h.render(w, r, http.StatusOK, "secret", pageData{Nav: "home", Data: page})
 }
 
-// secretReveal returns one key's value: an HTML fragment for htmx, or the full
-// page (with that key revealed) without JavaScript. Every reveal is audited.
+// secretReveal reveals one key ("key") or every key ("all"). Parameters come from
+// the form body or the query string. For htmx it returns out-of-band fragments:
+// value cells for the view page, or prefilled textareas when "for=edit" (binary
+// values are skipped there, since they can't be edited as text). Without
+// JavaScript it renders the full view page. Every reveal is audited.
 func (h *handlers) secretReveal(w http.ResponseWriter, r *http.Request) {
 	s, err := h.loadSecret(r)
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
-	key := r.PostFormValue("key")
-	page, err := h.buildSecretPage(r, s, key)
+	all := r.FormValue("all") != ""
+	key := r.FormValue("key")
+	page, err := h.buildSecretPage(r, s, func(k string) bool { return all || k == key })
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
-	idx := slices.IndexFunc(page.Keys, func(k keyView) bool { return k.Revealed })
-	if idx < 0 {
+	htmx := r.Header.Get("HX-Request") == "true"
+	edit := htmx && r.FormValue("for") == "edit"
+	var revealed []keyView
+	for _, k := range page.Keys {
+		if k.Revealed && (!edit || !k.Binary) {
+			revealed = append(revealed, k)
+		}
+	}
+	if !all && len(revealed) == 0 {
 		h.fail(w, r, store.ErrNotFound)
 		return
 	}
-	h.logAudit(r, audit.ActionSecretReveal, "secret", idStr(s.Row.ID),
-		map[string]any{"ref": s.Ref.String(), "key": key})
-
-	if r.Header.Get("HX-Request") == "true" {
-		h.renderFragment(w, r, "secret", "revealed", page.Keys[idx])
-		return
+	attrs := map[string]any{"ref": s.Ref.String()}
+	if all {
+		names := make([]string, len(revealed))
+		for i, k := range revealed {
+			names[i] = k.Key
+		}
+		attrs["keys"] = names
+	} else {
+		attrs["key"] = key
 	}
-	h.render(w, r, http.StatusOK, "secret", pageData{Nav: "home", Data: page})
+	h.logAudit(r, audit.ActionSecretReveal, "secret", idStr(s.Row.ID), attrs)
+
+	switch {
+	case edit:
+		h.renderFragment(w, r, "secret_edit", "edit-values", revealed)
+	case htmx:
+		h.renderFragment(w, r, "secret", "revealed-values", revealed)
+	default:
+		h.render(w, r, http.StatusOK, "secret", pageData{Nav: "home", Data: page})
+	}
 }
 
 func (h *handlers) renderFragment(w http.ResponseWriter, r *http.Request, page, name string, data any) {
@@ -251,6 +275,7 @@ func (h *handlers) renderFragment(w http.ResponseWriter, r *http.Request, page, 
 // ---- edit ------------------------------------------------------------------
 
 type editKey struct {
+	Index  int
 	Key    string
 	Binary bool
 }
@@ -289,8 +314,8 @@ func (h *handlers) secretEditForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	page := editPage{ID: s.Row.ID, Group: s.Group, Name: s.Name, ManagedBy: data.ManagedBy, Version: data.Version}
-	for _, k := range data.SortedKeys() {
-		page.Keys = append(page.Keys, editKey{Key: k, Binary: !utf8.Valid(data.Values[k])})
+	for i, k := range data.SortedKeys() {
+		page.Keys = append(page.Keys, editKey{Index: i, Key: k, Binary: !utf8.Valid(data.Values[k])})
 	}
 	for i := range newKeyRows {
 		page.NewRows = append(page.NewRows, i)
