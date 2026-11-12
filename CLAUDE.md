@@ -31,10 +31,13 @@ Tooling runs in Docker; do not require local installs beyond Go + Docker.
 - Config comes only from env vars, via `internal/config`.
 - Responses containing secret values: `Cache-Control: no-store`.
 - Audit events go through `internal/audit` (slog JSON to stdout).
+- Handlers get the user via `auth.FromContext(ctx)`; protect routes with `auth.RequireUser` / `auth.RequireAdmin`.
+  Never trust anything but the DB-loaded principal (the session cookie holds only the user ID).
 
 ## Conventions
 - Errors: wrap with `fmt.Errorf("...: %w", err)`; handlers map them to user-friendly messages.
 - Tests: table-driven; authz must have full coverage; k8s via the fake clientset; DB tests on real Postgres.
+  Auth/web tests use `internal/auth/authtest` (fake Google OIDC provider + in-memory user store).
 - Keep handlers thin: parse the request → call the service/store → render.
 
 ## Workflow

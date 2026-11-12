@@ -20,6 +20,9 @@ linters:
     rules:
       - path: _test\.go
         linters: [gosec, unparam]
+      # Test doubles (fake IdP redirects by design).
+      - path: internal/auth/authtest/
+        linters: [gosec]
 
 formatters:
   enable:

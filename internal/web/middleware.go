@@ -55,3 +55,23 @@ func recoverer(log *slog.Logger) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+// securityHeaders sets browser hardening headers on every response.
+func securityHeaders(secure bool) func(http.Handler) http.Handler {
+	const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://*.googleusercontent.com; " +
+		"object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h := w.Header()
+			h.Set("Content-Security-Policy", csp)
+			h.Set("X-Content-Type-Options", "nosniff")
+			h.Set("X-Frame-Options", "DENY")
+			h.Set("Referrer-Policy", "no-referrer")
+			h.Set("Cross-Origin-Opener-Policy", "same-origin")
+			if secure {
+				h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}

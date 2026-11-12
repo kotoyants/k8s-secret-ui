@@ -1,0 +1,14 @@
+{{define "content"}}
+<h1>Welcome, {{with .Principal.User.Name}}{{.}}{{else}}{{.Principal.User.Email}}{{end}}</h1>
+<h2>Your roles</h2>
+<ul>
+  {{range .Principal.Roles}}
+    <li>{{.Name}} ({{.Permission}}){{with .Tags}}: {{range $i, $t := .}}{{if $i}}, {{end}}{{$t}}{{end}}{{end}}</li>
+  {{else}}
+    <li>No roles assigned.</li>
+  {{end}}
+</ul>
+{{if not .Principal.IsAdmin}}
+  <p>An administrator must grant you a role before you can see any secrets.</p>
+{{end}}
+{{end}}

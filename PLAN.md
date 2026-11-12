@@ -45,12 +45,14 @@ Makefile
 - [x] `internal/tags`: tag validation/normalization shared by store and UI
 
 ## Phase 2 — Authentication
-- [ ] Google OIDC login / callback; `state` + `nonce` in a signed short-lived cookie
-- [ ] Check `email_verified` and `ALLOWED_DOMAINS` (`hd` claim)
-- [ ] Upsert the user on login; assign `default` on first login; `admin` for `ADMIN_EMAILS`
-- [ ] JWT session cookie; middleware loads the user + roles from the DB on each request; reject disabled users
-- [ ] Logout; CSRF middleware; security headers
-- [ ] Audit: `login`, `login_denied`, `logout`
+- [x] Google OIDC login / callback with PKCE (S256); `state` + `nonce` + verifier in a signed short-lived cookie
+- [x] Check `email_verified` and `ALLOWED_DOMAINS` (`hd` claim + email domain); `hd` hint sent when one domain
+- [x] Upsert the user on login; assign `default` on first login; `admin` for `ADMIN_EMAILS`
+- [x] JWT session cookie (HS256, key derived per purpose); middleware loads the user + roles from the DB on each request; disabled/deleted users lose access immediately
+- [x] Logout; CSRF via `http.CrossOriginProtection`; security headers (CSP, HSTS on https, nosniff, frame deny)
+- [x] Audit: `login`, `login_denied`, `logout` (`internal/audit`)
+- [x] Minimal login + home pages (proper layout/CSS in Phase 5)
+- [x] Tests: full browser flow against a fake OIDC provider (`internal/auth/authtest`)
 
 ## Phase 3 — Authorization core
 - [ ] `authz.CanRead(user, secret)`, `authz.CanWrite(user, secret)` per SPEC §4.1
@@ -85,6 +87,7 @@ Makefile
 
 ## Phase 8 — Hardening & polish
 - [ ] Rate limiting on login and reveal
+- [ ] Real client IP for audit behind the ingress (trusted proxy / `X-Forwarded-For` config)
 - [ ] CSP review, dependency scan (`govulncheck`)
 - [ ] GitHub Actions: lint, test, build and push image (GHCR)
 

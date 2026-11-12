@@ -17,6 +17,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kotoyants/k8s-secret-ui/internal/audit"
+	"github.com/kotoyants/k8s-secret-ui/internal/auth"
 	"github.com/kotoyants/k8s-secret-ui/internal/config"
 	"github.com/kotoyants/k8s-secret-ui/internal/store"
 	"github.com/kotoyants/k8s-secret-ui/internal/web"
@@ -93,11 +95,28 @@ func serve(ctx context.Context) error {
 	}
 	st := store.New(pool)
 
+	// ctx (not startCtx) keeps the OIDC key set refreshable for the server's lifetime.
+	authSvc, err := auth.New(ctx, auth.Config{
+		Issuer:         auth.GoogleIssuer,
+		ClientID:       cfg.GoogleClientID,
+		ClientSecret:   cfg.GoogleClientSecret,
+		BaseURL:        cfg.BaseURL,
+		SessionSecret:  cfg.SessionSecret,
+		SessionTTL:     cfg.SessionTTL,
+		AllowedDomains: cfg.AllowedDomains,
+		AdminEmails:    cfg.AdminEmails,
+	}, st, audit.New(log), log)
+	if err != nil {
+		return err
+	}
+
 	srv := &http.Server{
 		Addr: cfg.ListenAddr,
 		Handler: web.NewRouter(web.Deps{
 			Logger:    log,
 			Readiness: []web.ReadinessCheck{{Name: "database", Check: st.Ping}},
+			Auth:      authSvc,
+			Secure:    cfg.BaseURL.Scheme == "https",
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,

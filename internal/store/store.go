@@ -93,6 +93,20 @@ func (s *Store) InTx(ctx context.Context, fn func(q *db.Queries) error) error {
 	})
 }
 
+// LoadUserWithRoles returns a user and their roles (with tags). It returns
+// ErrNotFound if the user does not exist.
+func (s *Store) LoadUserWithRoles(ctx context.Context, id int64) (db.User, []db.ListUserRolesRow, error) {
+	u, err := s.GetUserByID(ctx, id)
+	if err != nil {
+		return db.User{}, nil, mapErr(err)
+	}
+	roles, err := s.ListUserRoles(ctx, id)
+	if err != nil {
+		return db.User{}, nil, fmt.Errorf("list user roles: %w", err)
+	}
+	return u, roles, nil
+}
+
 // LoginProfile is the identity data received from Google on login.
 type LoginProfile struct {
 	Email     string

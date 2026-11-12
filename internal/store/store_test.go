@@ -170,6 +170,19 @@ func TestLoginUser(t *testing.T) {
 	}
 }
 
+func TestLoadUserWithRoles(t *testing.T) {
+	s := newStore(t)
+	ctx := t.Context()
+	u, _, _ := s.LoginUser(ctx, LoginProfile{Email: "l@x.com"}, true)
+	got, roles, err := s.LoadUserWithRoles(ctx, u.ID)
+	if err != nil || got.Email != "l@x.com" || len(roles) != 2 {
+		t.Fatalf("got %+v roles=%v err=%v", got, roles, err)
+	}
+	if _, _, err := s.LoadUserWithRoles(ctx, 999999); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("missing user: err = %v, want ErrNotFound", err)
+	}
+}
+
 func TestEmailMustBeLowercase(t *testing.T) {
 	s := newStore(t)
 	if _, _, err := s.LoginUser(t.Context(), LoginProfile{Email: "A@x.com"}, false); err == nil {
