@@ -63,7 +63,18 @@ jobs:
   image:
     needs: [test, lint, sqlc, helm]
     # Checks are skipped on tag runs, so require "not failed" rather than "all succeeded".
-    if: github.event_name == 'push' && !cancelled() && !contains(needs.*.result, 'failure')
+    # Tags (releases) always build; main builds only for feat/fix commits (Conventional Commits,
+    # e.g. "feat: …", "fix(ui): …", "feat!: …"), judged by the last commit of the push.
+    if: >-
+      github.event_name == 'push' && !cancelled() && !contains(needs.*.result, 'failure') && (
+        github.ref_type == 'tag' ||
+        startsWith(github.event.head_commit.message, 'feat:') ||
+        startsWith(github.event.head_commit.message, 'feat(') ||
+        startsWith(github.event.head_commit.message, 'feat!:') ||
+        startsWith(github.event.head_commit.message, 'fix:') ||
+        startsWith(github.event.head_commit.message, 'fix(') ||
+        startsWith(github.event.head_commit.message, 'fix!:')
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read

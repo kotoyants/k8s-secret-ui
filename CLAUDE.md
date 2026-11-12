@@ -50,3 +50,6 @@ Tooling runs in Docker; do not require local installs beyond Go + Docker.
 ## Workflow
 - Ask clarifying questions when requirements are unclear; do not guess silently.
 - Do not commit without explicit approval.
+- Commit messages use Conventional Commits prefixes (`feat:`, `fix:`, `ci:`, `chore:`, `docs:`, `refactor:`, `test:`).
+  CI builds an image on main only for `feat`/`fix`; `v*` tags always build the image and chart.
+  For a release, bump the version in `Chart.yaml`, `values-prod.example.yaml` and README in the same commit before tagging.

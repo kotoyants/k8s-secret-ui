@@ -103,7 +103,8 @@ Makefile
 - [x] GitHub Actions (moved up from Phase 8): test, lint, sqlc-check, helm checks, build & push image to GHCR;
       on `v*` tags also publish the chart to `oci://ghcr.io/kotoyants/charts`
 - [x] Faster CI: tag runs skip checks (already run on main) and only build image + chart; binary built with a
-      cached Go build and copied into the image (`Dockerfile` target `prebuilt`); newer pushes cancel older runs
+      cached Go build and copied into the image (`Dockerfile` target `prebuilt`); newer pushes cancel older runs;
+      on main the image is built only for `feat`/`fix` commits (Conventional Commits), tags always build
 - [ ] First deploy to DOKS (namespaces, DB, Secret, Ingress via Terraform; then `helm upgrade --install`)
 
 ## Phase 8 — Hardening & polish
