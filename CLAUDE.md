@@ -9,10 +9,13 @@ Web app for managing Kubernetes secrets with Google login and tag-based roles.
 Go · chi · html/template + htmx (no JS build) · PostgreSQL (pgx + sqlc + goose) · go-oidc · client-go · Helm
 
 ## Commands
-- `make run` — run locally (needs `docker compose up -d` for Postgres)
-- `make test` — all tests (`go test ./...`)
-- `make lint` — golangci-lint
-- `make sqlc` — regenerate DB code after editing `internal/store/queries/*.sql`
+Tooling runs in Docker; do not require local installs beyond Go + Docker.
+- `make db-up` then `make run` — run locally (copy `.env.example` to `.env`)
+- `make test` — all tests; DB tests start Postgres via testcontainers (`go test -short ./...` skips them,
+  `TEST_DATABASE_URL` reuses an existing DB)
+- `make lint` — golangci-lint (Docker image if not installed)
+- `make sqlc` — regenerate `internal/store/db` after editing `internal/store/queries/*.sql`; `make sqlc-check` verifies
+- `make migrate` — apply migrations (the server also applies them at startup)
 - `make build` / `make docker`
 
 ## Rules
@@ -21,7 +24,9 @@ Go · chi · html/template + htmx (no JS build) · PostgreSQL (pgx + sqlc + goos
 - Every secret access goes through `internal/authz`. Do not duplicate the tag logic elsewhere.
   Rule: secret.tags ⊆ union of the user's role tags (writes use only `read_write` roles). Admin bypasses it.
 - Provider-specific code stays in `internal/provider/<name>/`. The core uses only the `Provider` interface.
-- DB schema changes = a new goose migration in `migrations/`; never edit an applied migration.
+- DB schema changes = a new goose migration in `migrations/` (`NNNNN_name.sql`); never edit an applied migration.
+- Multi-statement DB operations go in `internal/store/store.go` using `InTx`; map driver errors with `mapErr`
+  (`ErrNotFound`, `ErrConflict`, `ErrBuiltinRole`). Tags are always normalized via `internal/tags`.
 - Do not edit sqlc-generated files by hand.
 - Config comes only from env vars, via `internal/config`.
 - Responses containing secret values: `Cache-Control: no-store`.

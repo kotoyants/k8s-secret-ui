@@ -32,16 +32,17 @@ Makefile
 - [x] Multi-stage Dockerfile (distroless, non-root)
 
 ## Phase 1 — Database
-- [ ] `/readyz` DB ping check
-- [ ] Migration `001_init.sql`:
+- [x] `/readyz` DB ping check
+- [x] Migration `001_init.sql`:
   - `users(id, email UNIQUE, name, avatar_url, disabled, created_at, last_login_at)`
   - `roles(id, name UNIQUE, permission ENUM('read','read_write'), builtin BOOL)`
   - `role_tags(role_id, tag)`, `user_roles(user_id, role_id)`
   - `secrets(id, provider, locator JSONB, created_at, created_by)` with `UNIQUE(provider, locator)`
   - `secret_tags(secret_id, tag)`
   - seed the built-in `admin` and `default` roles
-- [ ] sqlc queries + generated code; run migrations at startup
-- [ ] Store tests against real Postgres
+- [x] sqlc queries + generated code (`make sqlc` via Docker); migrations run at startup (advisory lock) and via `secret-manager migrate`
+- [x] Store tests against real Postgres (testcontainers; `-short` skips them)
+- [x] `internal/tags`: tag validation/normalization shared by store and UI
 
 ## Phase 2 — Authentication
 - [ ] Google OIDC login / callback; `state` + `nonce` in a signed short-lived cookie

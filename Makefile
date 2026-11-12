@@ -2,6 +2,7 @@ BINARY          := secret-manager
 IMAGE           ?= ghcr.io/kotoyants/k8s-secret-ui
 VERSION         ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 GOLANGCI_VERSION ?= v2.15.0
+SQLC_VERSION    ?= 1.31.1
 
 # Load local env for `make run` if present.
 ifneq (,$(wildcard .env))
@@ -9,7 +10,7 @@ include .env
 export
 endif
 
-.PHONY: help run build test test-race cover lint fmt tidy docker db-up db-down clean
+.PHONY: help run build test test-race cover lint fmt tidy sqlc sqlc-check migrate docker db-up db-down clean
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -41,6 +42,15 @@ fmt: ## Format code
 
 tidy: ## Tidy go.mod
 	go mod tidy
+
+sqlc: ## Generate DB code from internal/store/queries (via Docker)
+	docker run --rm -u "$$(id -u):$$(id -g)" -v "$(CURDIR)":/src -w /src sqlc/sqlc:$(SQLC_VERSION) generate
+
+sqlc-check: ## Verify generated DB code is up to date (via Docker)
+	docker run --rm -u "$$(id -u):$$(id -g)" -v "$(CURDIR)":/src -w /src sqlc/sqlc:$(SQLC_VERSION) diff
+
+migrate: ## Apply migrations to DATABASE_URL (the app also does this at startup)
+	go run ./cmd/$(BINARY) migrate
 
 docker: ## Build the Docker image
 	docker build -t $(IMAGE):$(VERSION) .
