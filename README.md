@@ -45,8 +45,12 @@ To limit sign-in to your Google Workspace, set `ALLOWED_DOMAINS` (Helm: `config.
 ## Deployment
 
 Images are built by GitHub Actions and pushed to `ghcr.io/kotoyants/k8s-secret-ui`:
-`latest` and `sha-<commit>` on `main`, and `X.Y.Z` for tags `vX.Y.Z`. Release tags also publish the
-Helm chart to `oci://ghcr.io/kotoyants/charts/k8s-secret-ui`.
+`latest` and `sha-<commit>` for `feat:`/`fix:` commits on `main`.
+
+**Releasing:** bump `version` and `appVersion` in `deploy/helm/k8s-secret-ui/Chart.yaml` (plus the examples in
+`values-prod.example.yaml` and this README) and push to `main`. When that version has no `vX.Y.Z` tag yet, the run
+also tags the image `X.Y.Z`, publishes the Helm chart to `oci://ghcr.io/kotoyants/charts/k8s-secret-ui` and creates
+the `vX.Y.Z` git tag. Don't push release tags by hand.
 
 > The first push creates each GHCR package (image and chart) as **private**. Make them public once in
 > GitHub → Packages → Package settings → Change visibility.
@@ -69,7 +73,7 @@ Helm chart to `oci://ghcr.io/kotoyants/charts/k8s-secret-ui`.
 
 ### Install
 
-The chart is published as an OCI artifact for every release tag `vX.Y.Z`:
+The chart is published as an OCI artifact for every release `X.Y.Z`:
 
 ```sh
 helm upgrade --install k8s-secret-ui oci://ghcr.io/kotoyants/charts/k8s-secret-ui \

@@ -1,22 +1,23 @@
 name: ci
 
+# Releases come from main, not from pushed tags: when a push to main changes the version in
+# Chart.yaml (no vX.Y.Z tag yet), the same run builds the X.Y.Z image, publishes the chart and
+# creates the git tag. Tags created with GITHUB_TOKEN do not start another run.
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
 
 permissions:
   contents: read
 
-# A newer push to the same branch/PR cancels the older run; tag (release) runs are never cancelled.
+# PR runs are cancelled by newer pushes. Main runs queue instead, so a release is never cut short.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
-    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -28,7 +29,6 @@ jobs:
       - run: go test -race ./...
 
   lint:
-    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -40,7 +40,6 @@ jobs:
           version: v2.15.0
 
   sqlc:
-    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -48,7 +47,6 @@ jobs:
         run: make sqlc-check
 
   helm:
-    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -60,14 +58,40 @@ jobs:
             -f deploy/helm/values-prod.example.yaml --set ingress.enabled=true --set ingress.host=example.com \
           | docker run --rm -i ghcr.io/yannh/kubeconform:v0.8.0 -strict -summary -
 
+  # Is this push a release? Yes when Chart.yaml has a version whose vX.Y.Z tag doesn't exist yet.
+  release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        run: |
+          chart=deploy/helm/k8s-secret-ui/Chart.yaml
+          version=$(sed -n 's/^version: *//p' "$chart" | tr -d '"')
+          app=$(sed -n 's/^appVersion: *//p' "$chart" | tr -d '"')
+          if [ "$version" != "$app" ]; then
+            echo "::error file=$chart::version ($version) and appVersion ($app) differ"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            release=false
+          else
+            release=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "version $version, release: $release" >> "$GITHUB_STEP_SUMMARY"
+
   image:
-    needs: [test, lint, sqlc, helm]
-    # Checks are skipped on tag runs, so require "not failed" rather than "all succeeded".
-    # Tags (releases) always build; main builds only for feat/fix commits (Conventional Commits,
+    needs: [test, lint, sqlc, helm, release]
+    # Releases always build; otherwise only feat/fix commits (Conventional Commits,
     # e.g. "feat: …", "fix(ui): …", "feat!: …"), judged by the last commit of the push.
     if: >-
-      github.event_name == 'push' && !cancelled() && !contains(needs.*.result, 'failure') && (
-        github.ref_type == 'tag' ||
+      github.event_name == 'push' && (
+        needs.release.outputs.release == 'true' ||
         startsWith(github.event.head_commit.message, 'feat:') ||
         startsWith(github.event.head_commit.message, 'feat(') ||
         startsWith(github.event.head_commit.message, 'feat!:') ||
@@ -106,7 +130,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}}
+            type=raw,value=${{ needs.release.outputs.version }},enable=${{ needs.release.outputs.release == 'true' }}
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
       - uses: docker/build-push-action@v7
@@ -118,11 +142,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   chart:
-    needs: [image]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [image, release]
+    if: needs.release.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # create the release tag
       packages: write
     steps:
       - uses: actions/checkout@v7
@@ -131,8 +155,14 @@ jobs:
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          helm package deploy/helm/k8s-secret-ui --version "$version" --app-version "$version" -d dist
+          helm package deploy/helm/k8s-secret-ui --version "$VERSION" --app-version "$VERSION" -d dist
           echo "$TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          helm push "dist/k8s-secret-ui-${version}.tgz" "oci://ghcr.io/${OWNER,,}/charts"
+          helm push "dist/k8s-secret-ui-${VERSION}.tgz" "oci://ghcr.io/${OWNER,,}/charts"
+      - name: Tag the release
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          git tag "v$VERSION" "$GITHUB_SHA"
+          git push origin "v$VERSION"

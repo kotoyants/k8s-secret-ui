@@ -103,9 +103,10 @@ Makefile
 - [x] README: Google OAuth client setup, Terraform prerequisites, deploying
 - [x] GitHub Actions (moved up from Phase 8): test, lint, sqlc-check, helm checks, build & push image to GHCR;
       on `v*` tags also publish the chart to `oci://ghcr.io/kotoyants/charts`
-- [x] Faster CI: tag runs skip checks (already run on main) and only build image + chart; binary built with a
-      cached Go build and copied into the image (`Dockerfile` target `prebuilt`); newer pushes cancel older runs;
-      on main the image is built only for `feat`/`fix` commits (Conventional Commits), tags always build
+- [x] Faster CI: binary built with a cached Go build and copied into the image (`Dockerfile` target `prebuilt`);
+      on main the image is built only for `feat`/`fix` commits (Conventional Commits)
+- [x] Releases from main: a new `Chart.yaml` version (no `vX.Y.Z` tag yet) builds the `X.Y.Z` image, publishes the
+      chart and creates the git tag in the same run (no tag trigger, one run per release)
 - [ ] First deploy to DOKS (namespaces, DB, Secret, Ingress via Terraform; then `helm upgrade --install`)
 
 ## Phase 8 — Hardening & polish
