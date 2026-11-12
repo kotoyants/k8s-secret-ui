@@ -229,7 +229,7 @@ func TestSecretRevealAll(t *testing.T) {
 
 	// View page offers Reveal all plus per-key Reveal.
 	_, body := f.do(t, f.admin, http.MethodGet, "/secrets/"+f.bin, nil)
-	mustContain(t, body, "Reveal all", `name="key" value="BLOB"`, `name="key" value="TEXT"`)
+	mustContain(t, body, "Reveal all", `class="reveal-toggle"`, `reveal?key=BLOB`, `reveal?key=TEXT`, `data-reveal-target="val-1"`)
 
 	// Without JavaScript: full page with every value.
 	_, body = f.post(t, f.admin, path, url.Values{"all": {"1"}})
@@ -259,9 +259,9 @@ func TestSecretRevealAll(t *testing.T) {
 		t.Errorf("edit reveal of binary key = %d, want 404", code)
 	}
 
-	// Edit page: per-key Reveal only for text keys, plus Reveal all.
+	// Edit page: per-key reveal checkbox only for text keys, plus Reveal all.
 	_, body = f.do(t, f.admin, http.MethodGet, "/secrets/"+f.bin+"/edit", nil)
-	mustContain(t, body, "for=edit&amp;all=1", "for=edit&amp;key=TEXT", `id="edit-val-0"`)
+	mustContain(t, body, "for=edit&amp;all=1", "for=edit&amp;key=TEXT", `data-reveal-target="edit-val-1"`, `id="edit-val-0"`)
 	if strings.Contains(body, "key=BLOB") {
 		t.Error("reveal offered for a binary key on the edit page")
 	}

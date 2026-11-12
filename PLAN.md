@@ -91,7 +91,8 @@ Makefile
 - [x] External secrets editable with a warning (edit page + after save)
 - [x] Tests: visibility matrix, reveal (page + fragment), edit flows, conflict, external, missing, binary; mutation-checked
 - [x] UI polish: "Reveal all" (view + edit), per-key reveal on the edit page prefills the textarea (htmx OOB swaps,
-      binary skipped, audited with key names); equal-height filter controls; fixed 100% base font (Pico upscales to 131%)
+      binary skipped, audited with key names); equal-height filter controls; fixed 75% base font (Pico upscales to 131%);
+      per-key reveal is a checkbox (untick hides again / clears an unedited field), Reveal all stays a button
 
 ## Phase 7 — Deployment
 - [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,
