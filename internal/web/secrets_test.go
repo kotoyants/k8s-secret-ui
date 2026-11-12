@@ -138,7 +138,7 @@ func TestSecretViewAndReveal(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("view = %d", resp.StatusCode)
 	}
-	mustContain(t, body, "<code>TOKEN</code>", "Reveal")
+	mustContain(t, body, "<code>TOKEN</code>", "Reveal", `href="/static/app.css?v=`, `src="/static/app.js?v=`)
 	if strings.Contains(body, apiValue) {
 		t.Fatal("value shown before reveal")
 	}
@@ -161,7 +161,7 @@ func TestSecretViewAndReveal(t *testing.T) {
 	if resp.StatusCode != http.StatusOK || resp.Header.Get("Cache-Control") != "no-store" {
 		t.Fatalf("reveal = %d, cache %q", resp.StatusCode, resp.Header.Get("Cache-Control"))
 	}
-	mustContain(t, body, "<html", "data-copy", ">\n"+apiValue+"</textarea>")
+	mustContain(t, body, "<html", "reveal?for=copy&amp;key=TOKEN", ">\n"+apiValue+"</textarea>")
 
 	// Reveal via htmx: fragment only.
 	req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, f.srv.URL+"/secrets/"+f.api+"/reveal",
@@ -175,7 +175,7 @@ func TestSecretViewAndReveal(t *testing.T) {
 	defer func() { _ = hresp.Body.Close() }()
 	fragBytes, _ := io.ReadAll(hresp.Body)
 	frag := string(fragBytes)
-	if strings.Contains(frag, "<html") || !strings.Contains(frag, "data-copy") || !strings.Contains(frag, ">\n"+apiValue+"</textarea>") {
+	if strings.Contains(frag, "<html") || !strings.Contains(frag, ">\n"+apiValue+"</textarea>") {
 		t.Fatalf("fragment = %s", frag)
 	}
 
@@ -184,11 +184,24 @@ func TestSecretViewAndReveal(t *testing.T) {
 		t.Errorf("unknown key = %d", resp.StatusCode)
 	}
 
-	// Audited with the key name, never the value.
-	if n := strings.Count(f.audit.String(), `"action":"secret.reveal"`); n != 2 {
-		t.Errorf("reveal audit events = %d, want 2", n)
+	// Copy (double-click on a masked field): the raw value as text, never cached; one key only.
+	resp, body = f.post(t, f.bob, "/secrets/"+f.api+"/reveal?for=copy", url.Values{"key": {"TOKEN"}})
+	if resp.StatusCode != http.StatusOK || body != apiValue || resp.Header.Get("Cache-Control") != "no-store" ||
+		!strings.HasPrefix(resp.Header.Get("Content-Type"), "text/plain") {
+		t.Errorf("copy = %d %q cache %q type %q", resp.StatusCode, body, resp.Header.Get("Cache-Control"), resp.Header.Get("Content-Type"))
 	}
-	mustContain(t, f.audit.String(), `"key":"TOKEN"`)
+	if resp, _ := f.post(t, f.bob, "/secrets/"+f.api+"/reveal?for=copy", url.Values{"all": {"1"}}); resp.StatusCode == http.StatusOK {
+		t.Error("copy of all keys allowed")
+	}
+	if resp, _ := f.post(t, f.alice, "/secrets/"+f.api+"/reveal?for=copy", url.Values{"key": {"TOKEN"}}); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("alice copy = %d, want 404", resp.StatusCode)
+	}
+
+	// Audited with the key name, never the value (page, fragment and copy).
+	if n := strings.Count(f.audit.String(), `"action":"secret.reveal"`); n != 3 {
+		t.Errorf("reveal audit events = %d, want 3", n)
+	}
+	mustContain(t, f.audit.String(), `"key":"TOKEN"`, `"copy":true`)
 	if strings.Contains(f.audit.String(), apiValue) {
 		t.Fatal("secret value in audit log")
 	}

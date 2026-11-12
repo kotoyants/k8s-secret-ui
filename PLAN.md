@@ -96,6 +96,8 @@ Makefile
 - [x] "Reveal all" renamed to "Reveal" and made a toggle: when every value is revealed it reads "Hide" and hides all again
 - [x] View page values in equal-width read-only fields like the edit form; double-click copies (no Copy button);
       masked/unchanged fields show a "••••••••" placeholder (also after Hide on the edit page)
+- [x] Double-click copies masked values too (`reveal?for=copy`, plain text, audited); static assets served with
+      content-hash `?v=` URLs (cached immutable) so a release never leaves browsers on stale CSS/JS
 
 ## Phase 7 — Deployment
 - [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,

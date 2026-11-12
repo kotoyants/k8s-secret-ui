@@ -1,14 +1,35 @@
 // Loaded as an external script because the Content-Security-Policy forbids
 // inline JavaScript (and htmx event filters, which need eval).
 
-// Double-click a revealed value ([data-copy] read-only textarea) to copy all of it.
+// Double-click a value on the view page (.secret-value) to copy all of it. A masked
+// field fetches the value from its row's data-copy-url (audited) without showing it;
+// the clipboard gets a promise so the write still counts as part of the click.
 document.addEventListener("dblclick", function (e) {
-  var field = e.target.closest("[data-copy]");
+  var field = e.target.closest("textarea.secret-value");
   if (!field || !navigator.clipboard) return;
-  field.select();
-  navigator.clipboard.writeText(field.value).then(function () {
+  var row = field.closest("tr");
+  var url = row && row.getAttribute("data-copy-url");
+  var done = function () {
     field.classList.add("copied");
     setTimeout(function () { field.classList.remove("copied"); }, 1500);
+  };
+  if (field.value !== "" || !url) {
+    field.select();
+    navigator.clipboard.writeText(field.value).then(done);
+    return;
+  }
+  var text = fetch(url, { method: "POST", credentials: "same-origin" }).then(function (r) {
+    if (!r.ok) throw new Error("copy failed: " + r.status);
+    return r.text();
+  });
+  var write = window.ClipboardItem
+    ? navigator.clipboard.write([new ClipboardItem({
+        "text/plain": text.then(function (t) { return new Blob([t], { type: "text/plain" }); })
+      })])
+    : text.then(function (t) { return navigator.clipboard.writeText(t); });
+  write.then(done, function () {
+    field.classList.add("copy-failed");
+    setTimeout(function () { field.classList.remove("copy-failed"); }, 1500);
   });
 });
 

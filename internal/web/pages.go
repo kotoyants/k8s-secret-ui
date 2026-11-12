@@ -2,8 +2,10 @@ package web
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"embed"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"html/template"
@@ -24,8 +26,32 @@ var templateFS embed.FS
 //go:embed static
 var staticFS embed.FS
 
+// assetVersions maps each embedded static file to a short hash of its content.
+// Pages link /static/<name>?v=<hash>, so a new release busts browser caches.
+var assetVersions = func() map[string]string {
+	sub, _ := fs.Sub(staticFS, "static")
+	versions := map[string]string{}
+	_ = fs.WalkDir(sub, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		b, err := fs.ReadFile(sub, path)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(b)
+		versions[path] = hex.EncodeToString(sum[:6])
+		return nil
+	})
+	return versions
+}()
+
+// asset returns the cache-busting URL of an embedded static file.
+func asset(name string) string { return "/static/" + name + "?v=" + assetVersions[name] }
+
 var funcs = template.FuncMap{
-	"join": strings.Join,
+	"asset": asset,
+	"join":  strings.Join,
 	// lines is a textarea height for s: its line count, between 1 and 10.
 	"lines": func(s string) int { return min(max(strings.Count(s, "\n")+1, 1), 10) },
 	"time": func(t any) string {
@@ -55,12 +81,17 @@ func init() {
 	}
 }
 
-// staticHandler serves embedded CSS/JS.
+// staticHandler serves embedded CSS/JS. Versioned URLs (see asset) never change
+// content, so they are cached for a year; bare URLs only briefly.
 func staticHandler() http.Handler {
 	sub, _ := fs.Sub(staticFS, "static")
 	fileServer := http.StripPrefix("/static/", http.FileServerFS(sub))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
+		if r.URL.Query().Get("v") != "" {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=300")
+		}
 		fileServer.ServeHTTP(w, r)
 	})
 }

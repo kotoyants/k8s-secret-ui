@@ -71,8 +71,8 @@ h2 { --pico-font-size: 1.35rem; }
 .kv textarea::placeholder { letter-spacing: 0.1em; }
 /* Read-only values on the view page; double-click copies, briefly highlighting the field. */
 .secret-value[readonly] { cursor: copy; }
-.secret-value[readonly]:placeholder-shown { cursor: default; }
 .secret-value.copied { border-color: var(--pico-ins-color); }
+.secret-value.copy-failed { border-color: var(--pico-del-color); }
 
 /* Per-key reveal checkboxes; the actions column (the "Reveal" toggle button) is only as wide as its content.
    Pico makes submit buttons in forms full width, so reset that here. */

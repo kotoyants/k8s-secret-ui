@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"encoding/base64"
 	"errors"
+	"io"
 	"maps"
 	"net/http"
 	"slices"
@@ -212,7 +213,8 @@ func (h *handlers) secretView(w http.ResponseWriter, r *http.Request) {
 // the form body or the query string. For htmx it returns out-of-band fragments:
 // value cells for the view page, or prefilled textareas when "for=edit" (binary
 // values are skipped there, since they can't be edited as text). Without
-// JavaScript it renders the full view page. Every reveal is audited.
+// JavaScript it renders the full view page. "for=copy" returns one key's value as
+// plain text, for double-click copy on a masked field. Every reveal is audited.
 func (h *handlers) secretReveal(w http.ResponseWriter, r *http.Request) {
 	s, err := h.loadSecret(r)
 	if err != nil {
@@ -228,6 +230,11 @@ func (h *handlers) secretReveal(w http.ResponseWriter, r *http.Request) {
 	}
 	htmx := r.Header.Get("HX-Request") == "true"
 	edit := htmx && r.FormValue("for") == "edit"
+	cp := r.FormValue("for") == "copy"
+	if cp && all {
+		h.fail(w, r, errorf("Copy takes a single key."))
+		return
+	}
 	var revealed []keyView
 	for _, k := range page.Keys {
 		if k.Revealed && (!edit || !k.Binary) {
@@ -248,9 +255,16 @@ func (h *handlers) secretReveal(w http.ResponseWriter, r *http.Request) {
 	} else {
 		attrs["key"] = key
 	}
+	if cp {
+		attrs["copy"] = true
+	}
 	h.logAudit(r, audit.ActionSecretReveal, "secret", idStr(s.Row.ID), attrs)
 
 	switch {
+	case cp:
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
+		_, _ = io.WriteString(w, revealed[0].Value)
 	case edit:
 		h.renderFragment(w, r, "secret_edit", "edit-values", revealed)
 	case htmx:
