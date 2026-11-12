@@ -94,6 +94,8 @@ Admin only: import or un-import secrets, edit secret tags, manage roles and user
 2. List the secrets they can read (filter by tag or namespace, search by name).
 3. Open a secret: the key names are shown and values are **masked**; reveal or copy a value per key.
 4. With `read_write`: edit, add or remove keys and save, which updates the k8s Secret.
+   The edit form never shows current values: a blank value keeps the existing one.
+   Secrets the user cannot read return 404, so their existence is not revealed.
    Uses `resourceVersion` for optimistic locking (conflict → error with a reload prompt).
 
 ## 6. Provider abstraction

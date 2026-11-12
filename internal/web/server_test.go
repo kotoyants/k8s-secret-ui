@@ -140,7 +140,7 @@ func TestLoginPageShowsError(t *testing.T) {
 }
 
 func TestLoginFlowAndHome(t *testing.T) {
-	app := newTestApp(t)
+	app := newFullApp(t)
 	app.idp.SetIdentity(authtest.Identity{Email: "bob@corp.com", EmailVerified: true, Name: "Bob <b>"})
 	c := newClient()
 
@@ -152,7 +152,7 @@ func TestLoginFlowAndHome(t *testing.T) {
 	if resp.URL.Path != "/" {
 		t.Fatalf("final URL %s", resp.URL)
 	}
-	for _, want := range []string{"Welcome, Bob &lt;b&gt;", "bob@corp.com", "default (read)", "must grant you a role"} {
+	for _, want := range []string{"bob@corp.com", ">default</span>", "have access to any secrets yet"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("home missing %q:\n%s", want, body)
 		}

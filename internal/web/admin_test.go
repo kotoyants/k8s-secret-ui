@@ -175,7 +175,7 @@ func TestAdminRolesAndUsers(t *testing.T) {
 	_, body = a.post(t, admin, "/admin/roles/"+roleID+"/members", url.Values{"user_id": {bob}})
 	mustContain(t, body, "Member added.", "bob@corp.com")
 	_, body = a.do(t, bobC, http.MethodGet, "/", nil)
-	mustContain(t, body, "front-rw (read_write)")
+	mustContain(t, body, `title="read_write: front, prod">front-rw</span>`)
 
 	// Update role.
 	_, body = a.post(t, admin, "/admin/roles/"+roleID, url.Values{"name": {"front"}, "permission": {"read"}, "tags": {"front"}})

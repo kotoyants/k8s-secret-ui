@@ -69,10 +69,7 @@ func NewRouter(d Deps) http.Handler {
 		r.Get("/auth/callback", d.Auth.HandleCallback)
 		r.Post("/auth/logout", d.Auth.HandleLogout)
 
-		r.Group(func(r chi.Router) {
-			r.Use(auth.RequireUser)
-			r.Get("/", h.home)
-		})
+		r.Group(h.secretRoutes)
 		r.Route("/admin", h.adminRoutes)
 	})
 

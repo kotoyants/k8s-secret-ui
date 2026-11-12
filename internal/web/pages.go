@@ -45,7 +45,7 @@ var pages = map[string]*template.Template{}
 
 func init() {
 	for _, name := range []string{
-		"login", "home", "error",
+		"login", "error", "secrets", "secret", "secret_edit",
 		"admin_users", "admin_user", "admin_roles", "admin_role", "admin_secrets", "admin_import",
 	} {
 		pages[name] = template.Must(template.New("").Funcs(funcs).ParseFS(templateFS,
@@ -129,10 +129,6 @@ func (h *handlers) loginPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.render(w, r, http.StatusOK, "login", data)
-}
-
-func (h *handlers) home(w http.ResponseWriter, r *http.Request) {
-	h.render(w, r, http.StatusOK, "home", pageData{Nav: "home"})
 }
 
 // render executes a page into a buffer (so template errors don't produce half pages)

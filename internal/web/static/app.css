@@ -42,3 +42,10 @@ nav button.small { margin: 0; }
 }
 .flash-error { border-left-color: var(--pico-del-color); }
 .flash-ok { border-left-color: var(--pico-ins-color); }
+
+.secret-value {
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+.masked { letter-spacing: 0.1em; color: var(--pico-muted-color); }
+.key-row { margin-bottom: 0.5rem; }

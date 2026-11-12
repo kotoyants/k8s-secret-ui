@@ -80,10 +80,14 @@ Makefile
 - [x] Tests: full admin flows on real Postgres + fake k8s (`internal/store/storetest`), access control, CSRF, no value leaks
 
 ## Phase 6 — User UI
-- [ ] Secret list (filtered by authz), filter by tag or namespace, search
-- [ ] Secret view: keys with masked values, reveal and copy per key (`no-store`), audit `secret.reveal`
-- [ ] Edit (read_write): edit, add or remove keys; handle conflicts; audit `secret.update`;
-      external secrets editable with a warning that the managing tool may overwrite changes
+- [x] Secret list (filtered by authz) as the home page; filter by tag, namespace, search; shows read vs read & write
+- [x] Secret view: keys with masked values; reveal one key at a time (POST, htmx fragment or full page), copy button
+      (`static/app.js`), `no-store`, audit `secret.reveal` (key name only); binary values shown as base64
+- [x] Unreadable secrets return 404 (existence not revealed); read-only users get 403 on edit
+- [x] Edit (read_write) without revealing values: blank = keep, delete checkboxes, add new keys; CRLF normalized;
+      optimistic locking (handler + provider); audit `secret.update` with key names (changed/added/removed)
+- [x] External secrets editable with a warning (edit page + after save)
+- [x] Tests: visibility matrix, reveal (page + fragment), edit flows, conflict, external, missing, binary; mutation-checked
 
 ## Phase 7 — Deployment
 - [ ] Helm chart: Deployment (2+ replicas), Service, Ingress, ServiceAccount,
