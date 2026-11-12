@@ -9,12 +9,14 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch/PR cancels the older run; tag (release) runs are never cancelled.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   test:
+    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -26,6 +28,7 @@ jobs:
       - run: go test -race ./...
 
   lint:
+    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -37,6 +40,7 @@ jobs:
           version: v2.15.0
 
   sqlc:
+    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -44,6 +48,7 @@ jobs:
         run: make sqlc-check
 
   helm:
+    if: github.ref_type != 'tag' # the tagged commit was already checked on main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -57,13 +62,28 @@ jobs:
 
   image:
     needs: [test, lint, sqlc, helm]
-    if: github.event_name == 'push'
+    # Checks are skipped on tag runs, so require "not failed" rather than "all succeeded".
+    if: github.event_name == 'push' && !cancelled() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      # Own cache key: the test job's cache holds -race builds, which don't match this one.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-release-${{ runner.os }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
+          restore-keys: go-release-${{ runner.os }}-${{ hashFiles('go.sum') }}-
+      - name: Build binary
+        run: CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o dist/secret-manager ./cmd/secret-manager
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
@@ -81,11 +101,10 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
+          target: prebuilt
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   chart:
     needs: [image]
