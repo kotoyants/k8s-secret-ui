@@ -2,8 +2,8 @@ apiVersion: v2
 name: k8s-secret-ui
 description: Web UI for managing Kubernetes secrets with Google login and tag-based roles
 type: application
-version: 0.3.0
-appVersion: "0.3.0"
+version: 0.3.1
+appVersion: "0.3.1"
 home: https://github.com/kotoyants/k8s-secret-ui
 sources:
   - https://github.com/kotoyants/k8s-secret-ui
