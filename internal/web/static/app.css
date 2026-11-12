@@ -51,10 +51,9 @@ nav button.small { margin: 0; }
 .key-row { margin-bottom: 0.5rem; }
 
 /* Compact sizing: Pico scales the root font up to 131% on wide screens. Use a
-   fixed 75% base (12px) at every width (this file loads after Pico, so it wins),
-   which matches the old pages at 75% browser zoom. Everything in Pico is
-   rem-based, so spacing follows. */
-:root, :host { --pico-font-size: 75%; }
+   fixed 90% base (14.4px) at every width (this file loads after Pico, so it
+   wins). Everything in Pico is rem-based, so spacing follows. */
+:root, :host { --pico-font-size: 90%; }
 :root {
   --pico-form-element-spacing-vertical: 0.5rem;
   --pico-form-element-spacing-horizontal: 0.75rem;
@@ -73,5 +72,8 @@ h2 { --pico-font-size: 1.35rem; }
 .edit-keys td:nth-child(2) { width: 60%; }
 .edit-keys td:last-child, .edit-keys th:last-child { text-align: center; width: 1%; }
 
-/* Per-key reveal checkboxes. */
+/* Per-key reveal checkboxes; the actions column ("Reveal all") is only as wide as its content.
+   Pico makes submit buttons in forms full width, so reset that here. */
 .reveal-toggle { margin: 0; }
+th.actions, td.actions { width: 1%; }
+.actions button { width: auto; margin-bottom: 0; }
