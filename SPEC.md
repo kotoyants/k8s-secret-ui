@@ -93,7 +93,8 @@ Admin only: import or un-import secrets, edit secret tags, manage roles and user
 1. Log in with Google.
 2. List the secrets they can read (filter by tag or namespace, search by name).
 3. Open a secret: the key names are shown and values are **masked**; reveal a value per key or all at once
-   (the "Reveal" button; once everything is revealed it becomes "Hide" and masks all again), and copy it.
+   (the "Reveal" button; once everything is revealed it becomes "Hide" and masks all again), and copy it by double-clicking. Values (masked or revealed) are shown in equal-width
+   read-only fields, matching the edit form; masked and unchanged fields show "••••••••".
 4. With `read_write`: edit, add or remove keys and save, which updates the k8s Secret.
    The edit form hides current values by default: a blank value keeps the existing one. Each row is
    key | value | Reveal | delete, with the same "Reveal" toggle button above; Reveal loads the current value into the field (audited).

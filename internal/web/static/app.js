@@ -1,14 +1,14 @@
 // Loaded as an external script because the Content-Security-Policy forbids
 // inline JavaScript (and htmx event filters, which need eval).
 
-// Copy-to-clipboard for revealed secret values.
-document.addEventListener("click", function (e) {
-  var btn = e.target.closest("[data-copy]");
-  if (!btn || !navigator.clipboard) return;
-  navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(function () {
-    var label = btn.textContent;
-    btn.textContent = "Copied";
-    setTimeout(function () { btn.textContent = label; }, 1500);
+// Double-click a revealed value ([data-copy] read-only textarea) to copy all of it.
+document.addEventListener("dblclick", function (e) {
+  var field = e.target.closest("[data-copy]");
+  if (!field || !navigator.clipboard) return;
+  field.select();
+  navigator.clipboard.writeText(field.value).then(function () {
+    field.classList.add("copied");
+    setTimeout(function () { field.classList.remove("copied"); }, 1500);
   });
 });
 
@@ -34,9 +34,13 @@ document.addEventListener("change", function (e) {
       target.defaultValue = "";
     }
   } else {
-    var mask = document.createElement("span");
-    mask.className = "masked";
-    mask.textContent = "••••••••";
+    // View page: swap the value cell back to an empty masked field.
+    var mask = document.createElement("textarea");
+    mask.className = "secret-value";
+    mask.readOnly = true;
+    mask.rows = 1;
+    mask.placeholder = "••••••••";
+    mask.setAttribute("aria-label", box.getAttribute("aria-label").replace(/^Reveal /, "Value of ") + " (hidden)");
     target.replaceChildren(mask);
   }
 });

@@ -94,6 +94,8 @@ Makefile
       binary skipped, audited with key names); equal-height filter controls; fixed 90% base font (Pico upscales to 131%);
       per-key reveal is a checkbox (untick hides again / clears an unedited field), Reveal all stays a button
 - [x] "Reveal all" renamed to "Reveal" and made a toggle: when every value is revealed it reads "Hide" and hides all again
+- [x] View page values in equal-width read-only fields like the edit form; double-click copies (no Copy button);
+      masked/unchanged fields show a "••••••••" placeholder (also after Hide on the edit page)
 
 ## Phase 7 — Deployment
 - [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,

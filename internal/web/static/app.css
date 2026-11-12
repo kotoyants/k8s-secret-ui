@@ -43,11 +43,6 @@ nav button.small { margin: 0; }
 .flash-error { border-left-color: var(--pico-del-color); }
 .flash-ok { border-left-color: var(--pico-ins-color); }
 
-.secret-value {
-  word-break: break-all;
-  white-space: pre-wrap;
-}
-.masked { letter-spacing: 0.1em; color: var(--pico-muted-color); }
 .key-row { margin-bottom: 0.5rem; }
 
 /* Compact sizing: Pico scales the root font up to 131% on wide screens. Use a
@@ -66,11 +61,17 @@ h2 { --pico-font-size: 1.35rem; }
 .filters :is(input, select, button) { margin-bottom: 0; height: 100%; }
 .filters [type="search"] { border-radius: 0.25rem; }
 
-/* Edit page: key | value | reveal | delete on one line. */
-.edit-keys td { vertical-align: middle; }
-.edit-keys textarea { margin-bottom: 0; min-height: 0; field-sizing: content; max-height: 20lh; }
-.edit-keys td:nth-child(2) { width: 60%; }
-.edit-keys td:last-child, .edit-keys th:last-child { text-align: center; width: 1%; }
+/* Key/value tables (view and edit pages): every value is a full-width textarea that
+   grows with its content. View: key | value | reveal; edit: key | value | reveal | delete. */
+.kv td { vertical-align: middle; }
+.kv textarea { margin-bottom: 0; min-height: 0; field-sizing: content; max-height: 20lh; }
+.kv td:nth-child(2) { width: 60%; }
+.kv td:last-child, .kv th:last-child { text-align: center; width: 1%; }
+.kv textarea::placeholder { letter-spacing: 0.1em; }
+/* Read-only values on the view page; double-click copies, briefly highlighting the field. */
+.secret-value[readonly] { cursor: copy; }
+.secret-value[readonly]:placeholder-shown { cursor: default; }
+.secret-value.copied { border-color: var(--pico-ins-color); }
 
 /* Per-key reveal checkboxes; the actions column (the "Reveal" toggle button) is only as wide as its content.
    Pico makes submit buttons in forms full width, so reset that here. */

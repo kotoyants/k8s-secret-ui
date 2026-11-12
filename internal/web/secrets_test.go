@@ -161,7 +161,7 @@ func TestSecretViewAndReveal(t *testing.T) {
 	if resp.StatusCode != http.StatusOK || resp.Header.Get("Cache-Control") != "no-store" {
 		t.Fatalf("reveal = %d, cache %q", resp.StatusCode, resp.Header.Get("Cache-Control"))
 	}
-	mustContain(t, body, "<html", `<code class="secret-value">`+apiValue+`</code>`)
+	mustContain(t, body, "<html", "data-copy", ">\n"+apiValue+"</textarea>")
 
 	// Reveal via htmx: fragment only.
 	req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, f.srv.URL+"/secrets/"+f.api+"/reveal",
@@ -175,7 +175,7 @@ func TestSecretViewAndReveal(t *testing.T) {
 	defer func() { _ = hresp.Body.Close() }()
 	fragBytes, _ := io.ReadAll(hresp.Body)
 	frag := string(fragBytes)
-	if strings.Contains(frag, "<html") || !strings.Contains(frag, `data-copy="`+apiValue+`"`) {
+	if strings.Contains(frag, "<html") || !strings.Contains(frag, "data-copy") || !strings.Contains(frag, ">\n"+apiValue+"</textarea>") {
 		t.Fatalf("fragment = %s", frag)
 	}
 
