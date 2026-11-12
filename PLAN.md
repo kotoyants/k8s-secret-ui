@@ -24,14 +24,15 @@ Makefile
 ```
 
 ## Phase 0 — Scaffolding
-- [ ] `go mod init`, Makefile (`run`, `test`, `lint`, `sqlc`, `migrate`, `build`, `docker`)
-- [ ] `golangci-lint` config, `.editorconfig`, `.gitignore`
-- [ ] `docker-compose.yml` with Postgres for local dev
-- [ ] `internal/config`: load and validate env (fail fast)
-- [ ] Minimal server: chi router, `/healthz`, `/readyz`, graceful shutdown, slog JSON
-- [ ] Multi-stage Dockerfile (distroless, non-root)
+- [x] `go mod init`, Makefile (`run`, `test`, `lint`, `build`, `docker`, `db-up`); `sqlc`/`migrate` targets come in Phase 1
+- [x] `golangci-lint` config, `.editorconfig`, `.gitignore`
+- [x] `docker-compose.yml` with Postgres for local dev
+- [x] `internal/config`: load and validate env (fail fast)
+- [x] Minimal server: chi router, `/healthz`, `/readyz`, graceful shutdown, slog JSON
+- [x] Multi-stage Dockerfile (distroless, non-root)
 
 ## Phase 1 — Database
+- [ ] `/readyz` DB ping check
 - [ ] Migration `001_init.sql`:
   - `users(id, email UNIQUE, name, avatar_url, disabled, created_at, last_login_at)`
   - `roles(id, name UNIQUE, permission ENUM('read','read_write'), builtin BOOL)`
