@@ -65,7 +65,8 @@ h2 { --pico-font-size: 1.35rem; }
    grows with its content. View: key | value | reveal; edit: key | value | reveal | delete. */
 .kv td { vertical-align: middle; }
 .kv textarea { margin-bottom: 0; min-height: 0; field-sizing: content; max-height: 20lh; }
-.kv td:nth-child(2) { width: 60%; }
+/* Key column only as wide as the longest key; the value column takes the rest. */
+.kv td:first-child { width: 1%; white-space: nowrap; }
 .kv td:last-child, .kv th:last-child { text-align: center; width: 1%; }
 .kv textarea::placeholder { letter-spacing: 0.1em; }
 /* Read-only values on the view page; double-click copies, briefly highlighting the field. */
