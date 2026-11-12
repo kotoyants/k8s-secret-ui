@@ -93,6 +93,7 @@ Makefile
 - [x] UI polish: "Reveal all" (view + edit), per-key reveal on the edit page prefills the textarea (htmx OOB swaps,
       binary skipped, audited with key names); equal-height filter controls; fixed 90% base font (Pico upscales to 131%);
       per-key reveal is a checkbox (untick hides again / clears an unedited field), Reveal all stays a button
+- [x] "Reveal all" renamed to "Reveal" and made a toggle: when every value is revealed it reads "Hide" and hides all again
 
 ## Phase 7 — Deployment
 - [x] Helm chart `deploy/helm/k8s-secret-ui`: Deployment (2 replicas), Service, ServiceAccount, PDB,

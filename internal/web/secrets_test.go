@@ -229,7 +229,7 @@ func TestSecretRevealAll(t *testing.T) {
 
 	// View page offers Reveal all plus per-key Reveal.
 	_, body := f.do(t, f.admin, http.MethodGet, "/secrets/"+f.bin, nil)
-	mustContain(t, body, "Reveal all", `class="reveal-toggle"`, `reveal?key=BLOB`, `reveal?key=TEXT`, `data-reveal-target="val-1"`)
+	mustContain(t, body, "data-reveal-all", `class="reveal-toggle"`, `reveal?key=BLOB`, `reveal?key=TEXT`, `data-reveal-target="val-1"`)
 
 	// Without JavaScript: full page with every value.
 	_, body = f.post(t, f.admin, path, url.Values{"all": {"1"}})

@@ -41,11 +41,52 @@ document.addEventListener("change", function (e) {
   }
 });
 
-// Tick the checkbox of every value that was revealed (per key or "Reveal all").
+// Tick the checkbox of every value that was revealed (per key or "Reveal").
 document.addEventListener("htmx:oobAfterSwap", function (e) {
   var id = e.target && e.target.id;
   if (!id) return;
   document.querySelectorAll(".reveal-toggle").forEach(function (box) {
     if (box.getAttribute("data-reveal-target") === id) box.checked = true;
   });
+  syncRevealAll();
 });
+
+// The "Reveal" button ([data-reveal-all]) is a toggle: once every per-key box is
+// ticked it reads "Hide", and a click unticks each box (running the change
+// handler above) instead of posting another reveal.
+function allRevealed() {
+  var boxes = document.querySelectorAll(".reveal-toggle");
+  if (boxes.length === 0) return false;
+  for (var i = 0; i < boxes.length; i++) {
+    if (!boxes[i].checked) return false;
+  }
+  return true;
+}
+
+function syncRevealAll() {
+  var hide = allRevealed();
+  document.querySelectorAll("[data-reveal-all]").forEach(function (btn) {
+    btn.textContent = hide ? "Hide" : "Reveal";
+  });
+}
+
+document.addEventListener("change", function (e) {
+  if (e.target.classList && e.target.classList.contains("reveal-toggle")) syncRevealAll();
+});
+
+// Capture phase, so htmx never sees the click (or the form submit it would trigger).
+document.addEventListener("click", function (e) {
+  if (!e.target.closest("[data-reveal-all]") || !allRevealed()) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  document.querySelectorAll(".reveal-toggle").forEach(function (box) {
+    box.checked = false;
+    box.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}, true);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", syncRevealAll);
+} else {
+  syncRevealAll();
+}

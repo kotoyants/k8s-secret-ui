@@ -72,7 +72,7 @@ h2 { --pico-font-size: 1.35rem; }
 .edit-keys td:nth-child(2) { width: 60%; }
 .edit-keys td:last-child, .edit-keys th:last-child { text-align: center; width: 1%; }
 
-/* Per-key reveal checkboxes; the actions column ("Reveal all") is only as wide as its content.
+/* Per-key reveal checkboxes; the actions column (the "Reveal" toggle button) is only as wide as its content.
    Pico makes submit buttons in forms full width, so reset that here. */
 .reveal-toggle { margin: 0; }
 th.actions, td.actions { width: 1%; }
