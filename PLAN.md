@@ -55,9 +55,10 @@ Makefile
 - [x] Tests: full browser flow against a fake OIDC provider (`internal/auth/authtest`)
 
 ## Phase 3 — Authorization core
-- [ ] `authz.CanRead(user, secret)`, `authz.CanWrite(user, secret)` per SPEC §4.1
-- [ ] Table-driven tests covering: union of roles, mixed read/read_write, untagged secrets, admin, disabled
-- [ ] Filter secret lists through authz (an SQL pre-filter is optional; the Go check is authoritative)
+- [x] `authz.Subject` (built from `auth.Principal`) with `CanRead` / `CanWrite` / `Can` per SPEC §4.1
+- [x] `authz.Filter` for lists (Go check is authoritative; no SQL pre-filter for now)
+- [x] Table-driven tests: union of roles, mixed read/read_write, untagged secrets, admin, disabled, unknown permission
+- [x] Property test vs. an independent reference implementation (5000 random cases); 100% coverage; mutation-checked
 
 ## Phase 4 — Provider layer
 - [ ] `Provider` interface + registry
